@@ -282,3 +282,14 @@ for(f in files) {
 	go_genes_for_vero(f)
 }
 
+# analysis of similarities of our results with the results of a new
+# paper: Hart, J. R. et al. The butterfly effect in cancer:
+# A single base mutation can remodel the cell.
+# Proc. Natl. Acad. Sci. U. S. A. 112, 1131–1136 (2015).
+d <- read.csv("../pip3-rna-seq-input/GSE63452_mcf10a.vs.pik3ca.h1047r.csv", sep = ",")
+# select only significant genes at 0hr time point: 3485 genes
+d <- d[d$X0hr.p.value < 0.05, ]
+d <- hgnc_symbol_to_ensembl_id(d$gene)
+initialize_sets()
+venn(list("Butterfly" = d$ensembl_gene_id, "Our KI" = ki, "Our PTEN" = pten),
+     TRUE, "comparison-with-new-paper")
