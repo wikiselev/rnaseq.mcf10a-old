@@ -5,9 +5,9 @@ This is a collection of scripts that I used to analyze RNA-Seq time course data 
 
 The paper is in preparation at the moment. Draft is available [here](https://drive.google.com/folderview?id=0B9AEJU3ZybXIYkJ1T3JubFlOSWc&usp=sharing) (accessible only by collaborators).
 
-Raw ISMARA report can be viewed [here](http://lenoverelab.org/perso/kiselev/ismara_report_hg19/).
+Raw ISMARA report can be viewed [here](http://lenoverelab.org/data/2015/kiselev/ismara_report_hg19/).
 
-Averaged ISMARA report can be viewed [here](http://lenoverelab.org/perso/kiselev/averaged_report_hg19/).
+Averaged ISMARA report can be viewed [here](http://lenoverelab.org/data/2015/kiselev/averaged_report_hg19/).
 
 The main script is `main.R` which follows the paper chapters and where all the analysis steps are described. This file sources `functions.R` file which loads all required libraries and several function files (split by functionality):
 
