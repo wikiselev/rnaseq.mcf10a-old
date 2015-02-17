@@ -40,7 +40,8 @@ plot_genes <- function(genes, norm, s) {
   p <- ggplot(plot.data,
     aes(time, value, group = cond, color = cond)) +
       geom_line() + facet_wrap(~ name, scale = "free_y") +
-      geom_errorbar(limits, width = 0.25)
+      geom_errorbar(limits, width = 0.25) +
+        theme_bw()
   if(norm) {
     file.name <- paste0("../pip3-rna-seq-output/figures/genes-norm-", s, ".pdf")
   } else {
