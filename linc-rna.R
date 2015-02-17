@@ -1,14 +1,16 @@
 
-linc_rna <- function() {
+linc_rna <- function(cond) {
 	gene.ann <- read.csv("../pip3-rna-seq-input/linc-rna/from-biomart-11-07-14.txt")
-	ki <- rownames(get_diff_expr("wt_0_ki_0", 0.05))
-	pten <- rownames(get_diff_expr("wt_0_pten_0", 0.05))
-	res <- gene.ann[gene.ann[,1] %in% ki[ki %in% pten], ]
+	if(cond == "mut") {
+	        res <- gene.ann[gene.ann[,1] %in% ki[ki %in% pten], ]
+	} else {
+	        res <- gene.ann[gene.ann[,1] %in% a66_nost_eff, ] 
+	}
 
 	lincRNA <- res[res[,3] == "lincRNA", ]
 	genes <- unique(lincRNA[,1])
-	plot_genes(genes, F, "lincRNA")
-	plot_genes(genes, T, "lincRNA")
+	plot_genes(genes, F, paste0("lincRNA-", cond))
+	plot_genes(genes, T, paste0("lincRNA-", cond))
 }
 
 plot_linc_rna <- function() {
