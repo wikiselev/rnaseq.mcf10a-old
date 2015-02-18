@@ -734,3 +734,63 @@ go_genes_for_vero <- function(name) {
 	t3 <- t3[order(log10.p.value)]
 	write.csv(t3, file = paste0("../pip3-rna-seq-output/data-for-vero/GO/", name, ".csv"), row.names = F)
 }
+
+butterfly_paper_comparisons <- function() {
+        # analysis of similarities of our results with the results of a new
+        # paper: Hart, J. R. et al. The butterfly effect in cancer:
+        # A single base mutation can remodel the cell.
+        # Proc. Natl. Acad. Sci. U. S. A. 112, 1131–1136 (2015).
+        d <- read.csv("../pip3-rna-seq-input/GSE63452_mcf10a.vs.pik3ca.h1047r.csv", sep = ",")
+        # select only significant genes at 0hr time point: 3485 genes
+        d1 <- d[d$X0hr.p.value < 0.05, ]
+        d1 <- hgnc_symbol_to_ensembl_id(d1$gene)
+        initialize_sets()
+        venn(list("Butterfly" = d1$ensembl_gene_id, "Our KI" = ki, "Our PTEN" = pten),
+             TRUE, "comparison-with-new-paper-0hr")
+        # correlations between WTs and KIs
+        count.matrix <- readRDS("../pip3-rna-seq-output/rds/count-matrix.rds")
+        c <- count.matrix[,c(1:3, 58:60)]
+        c <- as.data.frame(c)
+        c$ensembl_gene_id <- rownames(c)
+        d2 <- d[,1:7]
+        gene.names <- hgnc_symbol_to_ensembl_id(d2$gene)
+        colnames(gene.names)[2] <- "gene"
+        d2 <- merge(d2, gene.names)
+        d2 <- merge(d2, c)
+        cor_heatmap(as.matrix(d2[,c(3:14)]), "test.pdf")
+        # plot a correlation matrix from a count matrix
+        # calculate pearson's correlation coefficients
+        cor.matrix <- cor(as.matrix(d2[,c(3:14)]), method = "pearson")
+        # plot correlation matrix in a file with 'name'
+        pdf(file = "../pip3-rna-seq-output/figures/cor-butterfly.pdf", w = 6, h = 6)
+        heatmap.2(cor.matrix, Rowv = FALSE, Colv = FALSE, dendrogram = "none",
+                  col=bluered(99), breaks = 100, trace = "none", keysize = 1.5, margins = c(10, 10))
+        dev.off()
+        
+        res <- prcomp(as.matrix(d2[,c(3:14)]))
+        pdf(file = "../pip3-rna-seq-output/figures/pca-variances-butterfly.pdf", w=7, h=6)
+        print(screeplot(res))
+        dev.off()
+        data <- as.data.frame(res$rotation[,1:3])
+        
+        data$Condition <- c("KI", "KI", "KI", "WT", "WT", "WT", "KI", "KI", "KI", "WT", "WT", "WT")
+        data$Paper <- c(rep("Butterfly", 6), rep("Ours", 6))
+        p <- ggplot(data, aes(PC1,PC2, color = Condition)) +
+                geom_point(aes(shape = Paper)) +
+                theme_bw()
+        pdf(file = "../pip3-rna-seq-output/figures/pca12-butterfly.pdf", w=5, h=4)
+        print(p)
+        dev.off()
+        p <- ggplot(data, aes(PC1,PC3, color = Condition)) +
+                geom_point(aes(shape = Paper)) +
+                theme_bw()
+        pdf(file = "../pip3-rna-seq-output/figures/pca13-butterfly.pdf", w=5, h=4)
+        print(p)
+        dev.off()
+        p <- ggplot(data, aes(PC2,PC3, color = Condition)) +
+                geom_point(aes(shape = Paper)) +
+                theme_bw()
+        pdf(file = "../pip3-rna-seq-output/figures/pca23-butterfly.pdf", w=5, h=4)
+        print(p)
+        dev.off()
+}
