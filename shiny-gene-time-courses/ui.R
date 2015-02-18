@@ -12,9 +12,13 @@ shinyUI(pageWithSidebar(
         sidebarPanel(
                 textInput('geneName', 'Gene HGNC symbol / Ensembl ID'),
                 checkboxInput("checkbox", label = "Normalize by the gene length", value = FALSE),
-                checkboxInput('savePlot', "Check to save the plot as PDF"),
+                checkboxInput('savePlot', "Save the plot as PDF"),
                 actionButton("goButton", "Plot!"),
-                div("After pressing this button wait until the data is loaded", style = "color:blue")
+                div("Data loading takes some time. Please be patient and click on Download link below only after the plot appears on the right.", style = "color:black"),
+                conditionalPanel(
+                        condition = "input.savePlot == true & input.goButton != 0",
+                        downloadLink('pdflink')
+                )
         ),
  
         mainPanel(

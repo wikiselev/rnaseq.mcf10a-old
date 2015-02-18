@@ -1,5 +1,6 @@
 library(shiny)
 library(ggplot2)
+library(data.table)
 
 shinyServer(function(input, output) {
         output$plot <- renderPlot({
@@ -29,9 +30,19 @@ shinyServer(function(input, output) {
                         theme_bw()
                 isolate({
                         if(input$savePlot) {
-                                ggsave(paste0(input$geneName, "-rna-seq-profile.png"), p, type="cairo-png")
+                                pdf("plot.pdf", width = 7, height = 4)
+                                print(p)
+                                dev.off()
                         }
                 })
                 print(p)
-        }, height=300)
+        }, height=400, width = 700)
+        output$pdflink <- downloadHandler(
+                filename <- function() {
+                        paste0(input$geneName, "-rna-seq-profile.pdf")
+                },
+                content <- function(file) {
+                        file.copy("plot.pdf", file)
+                }
+        )
 })
