@@ -5,6 +5,8 @@ This is a collection of scripts that I used to analyze RNA-Seq time course data 
 
 The paper is in preparation at the moment. Draft is available [here](https://drive.google.com/folderview?id=0B9AEJU3ZybXIYkJ1T3JubFlOSWc&usp=sharing) (accessible only by collaborators).
 
+Gene profiles can be interactively plotted [here](http://wikiselev.shinyapps.io/pip3-rna-seq-gene-profiles/).
+
 Raw ISMARA report can be viewed [here](http://lenoverelab.org/data/2015/kiselev/ismara_report_hg19/).
 
 Averaged ISMARA report can be viewed [here](http://lenoverelab.org/data/2015/kiselev/averaged_report_hg19/).
