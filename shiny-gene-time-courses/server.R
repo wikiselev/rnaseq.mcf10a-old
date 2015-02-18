@@ -1,39 +1,37 @@
 library(shiny)
 library(ggplot2)
- 
+
 shinyServer(function(input, output) {
-
-  tmp <- readRDS("data/plot-time-courses-all-genes.rds")
-  dataset <- reactive({
-    tmp[tmp$id == input$geneName,]
-  })
- 
-  output$plot <- renderPlot({
-
-    limits <- aes(ymax = ymax, ymin = ymin)
-
-    p <- ggplot(dataset(),
-      aes(time, value, group = cond, color = cond)) +
-        geom_line() + facet_wrap(~ id, scale = "free_y") +
-        geom_errorbar(limits, width = 0.25) +
-        theme_bw()
-    
-    # p <- ggplot(dataset(), aes_string(x=input$x, y=input$y)) + geom_point()
-    
-    # if (input$color != 'None')
-    #   p <- p + aes_string(color=input$color)
-    
-    # facets <- paste(input$facet_row, '~', input$facet_col)
-    # if (facets != '. ~ .')
-    #   p <- p + facet_grid(facets)
-    
-    # if (input$jitter)
-    #   p <- p + geom_jitter()
-    # if (input$smooth)
-    #   p <- p + geom_smooth()
-    
-    print(p)
-    
-  }, height=400)
-  
+        output$plot <- renderPlot({
+                if (input$goButton == 0)
+                        return()
+                data <- isolate({
+                        d <- readRDS("data/plot-data.rds")
+                        if(input$checkbox) {
+                                d <- d[d$norm_by_glength]
+                        } else {
+                                d <- d[!d$norm_by_glength]
+                        }
+                        validate(
+                                need((input$geneName %in% d$id) | (input$geneName %in% d$hgnc_symbol),
+                                     "Your gene is not in our list. We only accept HGNC symbols and Ensembl IDs. Please check that your gene name is either of the above...")
+                        )
+                        d[(d$id %in% input$geneName) | (d$hgnc_symbol %in% input$geneName)]
+                        
+                })
+                limits <- aes(ymax = ymax, ymin = ymin)
+                p <- ggplot(data,
+                        aes(time, value, group = Condition, color = Condition)) +
+                        geom_line(size = 1) +
+                        geom_point(size = 3) +
+                        geom_errorbar(limits, size = 0.5, width = 5) +
+                        labs(x = "Time, min", y = "Read counts") +
+                        theme_bw()
+                isolate({
+                        if(input$savePlot) {
+                                ggsave(paste0(input$geneName, "-rna-seq-profile.png"), p, type="cairo-png")
+                        }
+                })
+                print(p)
+        }, height=300)
 })
