@@ -37,10 +37,12 @@ plot_genes <- function(genes, norm, s) {
 
   limits <- aes(ymax = ymax, ymin = ymin)
 
-  p <- ggplot(plot.data,
-    aes(time, value, group = cond, color = cond)) +
-      geom_line() + facet_wrap(~ name, scale = "free_y") +
-      geom_errorbar(limits, width = 0.25) +
+  p <- ggplot(plot.data, aes(time, value, group = cond, color = cond)) +
+        geom_line(size = 1) +
+        geom_point(size = 3) +
+        facet_wrap(~ name, scale = "free_y") +
+        geom_errorbar(limits, size = 0.5, width = 5) +
+        labs(x = "Time, min", y = "Read counts") +
         theme_bw()
   if(norm) {
     file.name <- paste0("../pip3-rna-seq-output/figures/genes-norm-", s, ".pdf")
