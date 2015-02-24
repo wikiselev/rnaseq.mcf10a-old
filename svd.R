@@ -328,5 +328,19 @@ heatmap_ismara_activities <- function() {
         d <- d[rownames(d) %in% sig.z[,1],]
         t <- arrange_ismara_activity_matrix(d)
         colnames(t) <- sapply(strsplit(colnames(t), "_"), function(x){paste(x[1], x[3], sep="_")})
-        heatmap.2(t, Colv=F, col=bluered(19), trace = "none", dendrogram = "row")
+        rownames(t) <- sapply(strsplit(rownames(t), "\\."), function(x){x[1]})
+        t <- t(scale(t(t), center = T, scale = T))
+        # set custom distance and clustering functions
+        hclustfunc <- function(x) hclust(x, method="complete")
+        distfunc <- function(x) dist(x,method="maximum")
+        
+        # obtain the clusters
+        fit <- hclustfunc(distfunc(t))
+        clusters <- cutree(fit, 9)
+        pdf(file = "../pip3-rna-seq-output/figures/ismara-activities-heatmap.pdf", w = 6, h = 6)
+        heatmap.2(t, Colv=F, trace = "none", scale='none', margins=c(5,16),
+                  hclust=hclustfunc, distfun=distfunc, col=greenred(256), symbreak=T,
+                  dendrogram = "row", lwid=c(0.3,0.05,1), lhei=c(0.3,1), lmat=rbind(c(5,0,4),c(3,1,2)),
+                  RowSideColors=as.character(clusters))
+        dev.off()
 }
