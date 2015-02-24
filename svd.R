@@ -310,3 +310,22 @@ s_v_d_ismara <- function() {
   dev.off()
   return(res)
 }
+
+arrange_ismara_activity_matrix <- function(count.matrix){
+        x <- c(37,38,39,
+               58,68,70,59,64,71,62,69,75,63,67,74,60,65,72,61,66,73,
+               19,25,31,20,26,32,23,29,35,24,30,36,21,27,33,22,28,34,
+               1,7,13,2,8,14,5,11,17,6,12,18,3,9,15,4,10,16,
+               40,46,52,41,47,53,44,50,56,45,51,57,42,48,54,43,49,55)
+        return(count.matrix[,x])
+}
+
+heatmap_ismara_activities <- function() {
+        d <- t(read.table(file = "../pip3-rna-seq-input/ismara/activity_table.txt", header = T))
+        sig <- read.table(file = "../pip3-rna-seq-input/ismara/active_matrices.txt")
+        colnames(sig) <- c("variable", "zval")
+        sig.z <- sig[sig$zval > 2.0,]
+        d <- d[rownames(d) %in% sig.z[,1],]
+        t <- arrange_ismara_activity_matrix(d)
+        heatmap.2(t, Colv=F, col=redgreen(19), trace = "none", dendrogram = "row")
+}
