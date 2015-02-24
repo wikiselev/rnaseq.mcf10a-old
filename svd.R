@@ -327,5 +327,6 @@ heatmap_ismara_activities <- function() {
         sig.z <- sig[sig$zval > 2.0,]
         d <- d[rownames(d) %in% sig.z[,1],]
         t <- arrange_ismara_activity_matrix(d)
-        heatmap.2(t, Colv=F, col=redgreen(19), trace = "none", dendrogram = "row")
+        colnames(t) <- sapply(strsplit(colnames(t), "_"), function(x){paste(x[1], x[3], sep="_")})
+        heatmap.2(t, Colv=F, col=bluered(19), trace = "none", dendrogram = "row")
 }
