@@ -320,6 +320,11 @@ arrange_ismara_activity_matrix <- function(count.matrix){
         return(count.matrix[,x])
 }
 
+arrange_ismara_activity_matrix_av <- function(count.matrix){
+        x <- c(13,20,21,24,25,22,23,7,8,11,12,9,10,1,2,5,6,3,4,14,15,18,19,16,17)
+        return(count.matrix[,x])
+}
+
 heatmap_ismara_activities <- function() {
         d <- t(read.table(file = "../pip3-rna-seq-input/ismara/activity_table.txt", header = T))
         sig <- read.table(file = "../pip3-rna-seq-input/ismara/active_matrices.txt")
@@ -328,8 +333,23 @@ heatmap_ismara_activities <- function() {
         d <- d[rownames(d) %in% sig.z[,1],]
         t <- arrange_ismara_activity_matrix(d)
         colnames(t) <- sapply(strsplit(colnames(t), "_"), function(x){paste(x[1], x[3], sep="_")})
+        
+        t.av <- as.data.table(melt(t))
+        t.av <- t.av[,list(av = mean(value)), by = c("X1", "X2")]
+        t.av <- cast(t.av, X1 ~ X2)
+        rownames(t.av) <- t.av$X1
+        t.av <- t.av[,2:26]
+        cols <- colnames(t.av)
+        rows <- rownames(t.av)
+        t.av <- as.matrix(t.av)
+        colnames(t.av) <- cols
+        rownames(t.av) <- rows
+        t.av <- arrange_ismara_activity_matrix_av(t.av)
+        
         # rownames(t) <- sapply(strsplit(rownames(t), "\\."), function(x){x[1]})
         t <- t(scale(t(t), center = T, scale = T))
+        t.av <- t(scale(t(t.av), center = T, scale = T))
+        
         # set custom distance and clustering functions
         hclustfunc <- function(x) hclust(x, method="complete")
         distfunc <- function(x) dist(x,method="maximum")
@@ -339,6 +359,16 @@ heatmap_ismara_activities <- function() {
         clusters <- cutree(fit, 9)
         pdf(file = "../pip3-rna-seq-output/figures/ismara-activities-heatmap.pdf", w = 6, h = 6)
         heatmap.2(t, Colv=F, trace = "none", scale='none', margins=c(5,17),
+                  hclust=hclustfunc, distfun=distfunc, col=bluered(256), symbreak=T,
+                  dendrogram = "row", lwid=c(0.3,0.05,1), lhei=c(0.3,1), lmat=rbind(c(5,0,4),c(3,1,2)),
+                  RowSideColors=as.character(clusters))
+        dev.off()
+        
+        # obtain the clusters
+        fit <- hclustfunc(distfunc(t.av))
+        clusters <- cutree(fit, 9)
+        pdf(file = "../pip3-rna-seq-output/figures/ismara-activities-heatmap-av.pdf", w = 6, h = 6)
+        heatmap.2(t.av, Colv=F, trace = "none", scale='none', margins=c(5,17),
                   hclust=hclustfunc, distfun=distfunc, col=bluered(256), symbreak=T,
                   dendrogram = "row", lwid=c(0.3,0.05,1), lhei=c(0.3,1), lmat=rbind(c(5,0,4),c(3,1,2)),
                   RowSideColors=as.character(clusters))
