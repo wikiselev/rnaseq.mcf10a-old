@@ -288,3 +288,5 @@ for(f in files) {
 # A single base mutation can remodel the cell.
 # Proc. Natl. Acad. Sci. U. S. A. 112, 1131–1136 (2015).
 butterfly_paper_comparisons()
+heatmap_ismara_activities()
+prepare_data_for_len_phil_effect()

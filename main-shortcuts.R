@@ -794,3 +794,31 @@ butterfly_paper_comparisons <- function() {
         print(p)
         dev.off()
 }
+
+prepare_data_for_len_phil_effect <- function(){
+        venn(list("PTEN" = pten, "KI" = ki, "A66" = a66.tc.cond), T, "len-phil-effect")
+        l.p.genes <- pten[pten %in% ki & pten %in% a66.tc.cond]
+        clust_boot(l.p.genes, 2, 8, "len-phil-effect", 0)
+        plot_bootstrap_data("len-phil-effect")
+        plot_genes(l.p.genes, F, "len-phil-effect")
+        clust <- get_clust_genes("len-phil-effect", "0-2")
+        clusts <- list(clust$partition)
+        plot_all_clusts(clusts, "len-phil-effect", c(0))
+        ind <- 1
+        for(j in clusts) {
+                for (i in 1:length(unique(j))) {
+                        GO(names(j[j == i]), all.genes, paste0("len-phil-effect", c(1, 2)[ind], "-", i), 0.05)
+                }
+                ind <- ind + 1
+        }
+        GO(l.p.genes, all.genes, "len-phil-effect", 0.05)
+        plot_genes(names(clusts[[1]][clusts[[1]] == 1]), F, "len-phil-effect-1")
+        plot_genes(names(clusts[[1]][clusts[[1]] == 2]), F, "len-phil-effect-2")
+        
+        len_phil_effect1 <- annotate_go_terms("len-phil-effect1-1")
+        len_phil_effect2 <- annotate_go_terms("len-phil-effect1-2")
+        len_phil_effect <- annotate_go_terms("len-phil-effect")
+        plot_go_terms(len_phil_effect1, "len-phil-effect1", 10)
+        plot_go_terms(len_phil_effect2, "len-phil-effect2", 10)
+        plot_go_terms(len_phil_effect, "len-phil-effect", 10)
+}
