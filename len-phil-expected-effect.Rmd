@@ -1,0 +1,215 @@
+---
+title: "Expected effect"
+author: "Vladimir Kiselev"
+date: "2 March 2015"
+output: pdf_document
+---
+
+# Genes affect by both PTEN, PIK3CA H1047R and A66
+
+```{r, echo=FALSE, include=FALSE, warning=FALSE}
+source("functions.R")
+initialize_sets()
+```
+
+First, define genes with the expected effect. Expression of those genes should
+be affected by all pertrubations:
+
+```{r, echo=FALSE, fig.width=9, fig.height=6, fig.align='center'}
+        v <- Venn(list("PTEN" = pten, "KI" = ki, "A66" = a66.tc.cond))
+        plot(v, doWeights = TRUE)
+```
+
+Now consider 136 genes from the green segment. Plot them first:
+
+```{r, echo=FALSE, cache=TRUE, fig.width=9, fig.height=6}
+        plot_genes <- function(genes, norm) {
+                plot.data <- get_plot_data(genes, norm)[[1]]
+                res <- get_plot_data(genes, norm)[[2]]
+                
+                limits <- aes(ymax = ymax, ymin = ymin)
+                
+                p <- ggplot(plot.data, aes(time, value, group = cond, color = cond)) +
+                geom_line(size = 1) +
+                geom_point(size = 3) +
+                facet_wrap(~ name, scale = "free_y") +
+                geom_errorbar(limits, size = 0.5, width = 5) +
+                labs(x = "Time, min", y = "Read counts") +
+                theme_bw()
+                print(p)
+        }
+
+        l.p.genes <- pten[pten %in% ki & pten %in% a66.tc.cond]
+        plot_genes(l.p.genes[1:16], F)
+        plot_genes(l.p.genes[17:32], F)
+        plot_genes(l.p.genes[33:48], F)
+        plot_genes(l.p.genes[49:64], F)
+        plot_genes(l.p.genes[65:80], F)
+        plot_genes(l.p.genes[81:96], F)
+        plot_genes(l.p.genes[97:112], F)
+        plot_genes(l.p.genes[113:128], F)
+        plot_genes(l.p.genes[129:136], F)
+```
+
+GO enrichment analysis on this gene set provides:
+
+```{r, echo=FALSE, cache=TRUE, fig.width=6, fig.height=3, fig.align='center'}
+plot_go_terms <- function(d, name, num) {
+  d <- d[order(log10.p.value)]
+  d$description <- factor(d$description, levels = rev(d$description))
+
+  d <- head(d, num)
+
+  p <- ggplot(d, aes(description, num, fill = log10.p.value)) +
+    geom_bar(stat = "identity") +
+    coord_flip() +
+    # scale_fill_gradient2(midpoint = 10, low="blue", high="red") +
+    scale_fill_gradient(high = "grey90", low = "grey40") +
+    theme_bw() +
+    theme(axis.line = element_blank(),
+        panel.grid.major = element_blank(),
+        panel.grid.minor = element_blank(),
+        panel.border = element_blank(),
+        panel.background = element_blank()) 
+  print(p)
+}
+
+len_phil_effect <- annotate_go_terms("len-phil-effect")
+plot_go_terms(len_phil_effect, "len-phil-effect", 10)
+```
+
+# Gene clustering
+
+We cluster the same gene set of 136 genes defined above using the same algorithcms as described in the paper. Results of cluster stability suggest that there are only 2 stable clusters among 136 genes:
+
+```{r, echo=FALSE, cache=TRUE, fig.width=9, fig.height=3}
+plot_bootstrap_data <- function(name) {
+	files <- list.files(paste0("../pip3-rna-seq-output/rds/clusts/", name))
+	# files <- files[grepl(paste0("clust-", name, "set"), files)]
+	jaccard.stats <- data.frame(factor(), numeric(), numeric(), factor(), factor())
+	for(file in files){
+		set <- strsplit(file, "-")[[1]][1]
+		clust.num <- as.numeric(strsplit(strsplit(file, "-")[[1]][2], "\\.")[[1]][1])
+		dat <- readRDS(paste0("../pip3-rna-seq-output/rds/clusts/", name, "/", file))
+		for(i in 1:clust.num) {
+			jaccard.stats <- rbind(jaccard.stats,
+								   cbind(set,
+								   		 dat$bootresult[i,],
+								   		 i,
+								   		 clust.num)
+								   )
+		}
+
+	}
+	colnames(jaccard.stats) <- c("set", "jacc.sim", "clust.ind", "clust.num")
+	jaccard.stats$jacc.sim <- as.numeric(jaccard.stats$jacc.sim)
+
+	# limits <- aes(ymax = jacc.sim + jacc.sd, ymin = jacc.sim - jacc.sd)
+	# jaccard.stats$set <- factor(jaccard.stats$set,
+		# levels = unique(jaccard.stats$set))
+
+	p <- ggplot(jaccard.stats, aes(clust.ind, jacc.sim)) +
+		# geom_bar(stat = "identity", position = "dodge") +
+		geom_boxplot() +
+		facet_grid(set ~ clust.num) +
+		geom_hline(yintercept=0.75, color = "red") +
+		theme_bw()
+		# geom_errorbar(limits, width = 0.25)
+	print(p)
+}
+
+plot_bootstrap_data("len-phil-effect")
+
+
+```
+
+The averaged profiles of these two clusters:
+
+```{r, echo=FALSE, cache=TRUE, fig.width=9, fig.height=3}
+plot_all_clusts <- function(clusts, name, inds) {
+	plot.data <- readRDS("../pip3-rna-seq-output/rds/plot-time-courses-all-genes-scaled.rds")
+
+	plot.data <- as.data.table(plot.data)
+	plot.data[,clust:=-1]
+
+	ind <- 1
+	clust.size <- NULL
+
+	for (j in clusts) {
+		clust.size <- rbind(clust.size, cbind(as.data.frame(table(j)), inds[ind]))
+		for (i in 1:length(unique(j))) {
+			genes <- names(j[j == i])
+			plot.data[id %in% genes, clust:=i]
+			plot.data[id %in% genes, set:=inds[ind]]
+		}
+		ind <- ind + 1;
+	}
+
+	colnames(clust.size) <- c("clust", "gene.num", "set")
+	clust.size$val <- 0
+	clust.size$sd <- 0
+	clust.size$cond <- "wt"
+	clust.size$time <- 0
+
+	plot.data <- plot.data[clust != -1]
+	# plot.data[,gr:=paste(id, cond, sep = "_")]
+
+	plot.data <-
+		plot.data[, list(val = mean(value), sd = sd(value)), by = c("cond", "time", "clust", "set")]
+
+	limits <- aes(ymax = val + sd, ymin = val - sd)
+
+	p <- ggplot(plot.data, aes(time, val, group = cond, color = cond)) +
+		# geom_rect(data = clust.size, aes(fill = log10(gene.num)), xmin = -Inf,xmax = Inf,
+	            # ymin = -Inf,ymax = Inf, alpha = 0.2) +
+	    geom_line() +
+	    geom_point() +
+		geom_text(aes(x = 270, y = 1, label = gene.num),
+	         data = clust.size, colour = "black") +
+	    # facet_grid(set ~ clust, scale = "free_y")
+	    facet_grid(. ~ clust) +
+	    theme_bw()
+	    # geom_errorbar(limits, width = 0.25)
+
+	print(p)
+}
+
+clust <- get_clust_genes("len-phil-effect", "0-2")
+clusts <- list(clust$partition)
+plot_all_clusts(clusts, "len-phil-effect", c(0))
+```
+
+Go enrichment analysis of the first cluster:
+
+```{r, echo=FALSE, cache=TRUE, fig.width=6, fig.height=3, fig.align='center'}
+len_phil_effect1 <- annotate_go_terms("len-phil-effect1-1")
+plot_go_terms(len_phil_effect1, "len-phil-effect1", 10)
+```
+
+Go enrichment analysis of the second cluster:
+
+```{r, echo=FALSE, cache=TRUE, fig.width=6, fig.height=3, fig.align='center'}
+len_phil_effect2 <- annotate_go_terms("len-phil-effect1-2")
+plot_go_terms(len_phil_effect2, "len-phil-effect2", 10)
+```
+
+Plot genes in the first cluster:
+
+```{r, echo=FALSE, cache=TRUE, fig.width=9, fig.height=6}
+        l.p.genes <- names(clusts[[1]][clusts[[1]] == 1])
+        plot_genes(l.p.genes[1:16], F)
+        plot_genes(l.p.genes[17:32], F)
+        plot_genes(l.p.genes[33:48], F)
+        plot_genes(l.p.genes[49:64], F)
+```
+
+Plot genes in the second cluster:
+
+```{r, echo=FALSE, cache=TRUE, fig.width=9, fig.height=6}
+        l.p.genes <- names(clusts[[1]][clusts[[1]] == 2])
+        plot_genes(l.p.genes[1:16], F)
+        plot_genes(l.p.genes[17:32], F)
+        plot_genes(l.p.genes[33:48], F)
+        plot_genes(l.p.genes[49:64], F)
+        plot_genes(l.p.genes[65:72], F)
+```
