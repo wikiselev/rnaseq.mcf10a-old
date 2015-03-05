@@ -797,6 +797,7 @@ butterfly_paper_comparisons <- function() {
 
 prepare_data_for_len_phil_effect <- function(){
         venn(list("PTEN" = pten, "KI" = ki, "A66" = a66.tc.cond), T, "len-phil-effect")
+        venn_ellipses(list("PTEN" = pten, "KI" = ki, "A66" = a66.tc.cond, "EGF" = egf.lrt), F, "len-phil-effect-with-egf")
         l.p.genes <- pten[pten %in% ki & pten %in% a66.tc.cond]
         clust_boot(l.p.genes, 2, 8, "len-phil-effect", 0)
         plot_bootstrap_data("len-phil-effect")
