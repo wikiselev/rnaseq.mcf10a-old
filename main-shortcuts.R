@@ -821,4 +821,13 @@ prepare_data_for_len_phil_effect <- function(){
         plot_go_terms(len_phil_effect1, "len-phil-effect1", 10)
         plot_go_terms(len_phil_effect2, "len-phil-effect2", 10)
         plot_go_terms(len_phil_effect, "len-phil-effect", 10)
+        
+        d <- read.csv("../pip3-rna-seq-input/GSE63452_mcf10a.vs.pik3ca.h1047r.csv", sep = ",")
+        # select only significant genes at 0hr time point: 3485 genes
+        d1 <- d[d$X0hr.p.value < 0.05, ]
+        d1 <- hgnc_symbol_to_ensembl_id(d1$gene)
+        venn(list("Butterfly" = d1$ensembl_gene_id, "'Expected' Genes" = l.p.genes),
+             TRUE, "comparison-with-new-paper-expected-effect")
+        plot_genes(l.p.genes[l.p.genes %in% d1$ensembl_gene_id], F, "len-phil-effect-in-butterfly")
+        plot_genes(l.p.genes[!l.p.genes %in% d1$ensembl_gene_id], F, "len-phil-effect-not-in-butterfly")
 }
