@@ -14,7 +14,7 @@ shinyUI(pageWithSidebar(
                 checkboxInput("checkbox", label = "Normalize by the gene length", value = FALSE),
                 checkboxInput('savePlot', "Save the plot as PDF"),
                 actionButton("goButton", "Plot!"),
-                div("Data loading takes some time. Please be patient and click on Download link below only after the plot appears on the right.", style = "color:black"),
+                div("Please click on Download link below only after the plot appears on the right.", style = "color:black"),
                 conditionalPanel(
                         condition = "input.savePlot == true & input.goButton != 0",
                         downloadLink('pdflink')
