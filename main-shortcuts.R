@@ -735,18 +735,45 @@ go_genes_for_vero <- function(name) {
 	write.csv(t3, file = paste0("../pip3-rna-seq-output/data-for-vero/GO/", name, ".csv"), row.names = F)
 }
 
+import_other_mcf10a_wt <- function(){
+        d <- read.csv("../pip3-rna-seq-input/other-cell-lines/140625_Klijn_count_noncoding.txt", sep = "\t", header = TRUE)
+        d <- as.data.table(d)
+        d <- d[,list(geneID, Sample.73)]
+        
+        d1 <- read.csv("../pip3-rna-seq-input/other-cell-lines/140625_Klijn_counts_coding.txt", sep = "\t", header = TRUE)
+        d1 <- as.data.table(d1)
+        d1 <- d1[,list(geneID, Sample.73)]
+        colnames(d1) <- c("EntrezGene.ID", "counts")
+        setkey(d1, "EntrezGene.ID")
+        
+        # ann <- read.csv("../pip3-rna-seq-input/other-cell-lines/140625_Klijn_geneToTranscript.txt", sep = "\t", header = TRUE)
+        # ann <- as.data.table(ann)
+        # ann$gene_id <- as.numeric(unlist(sapply(strsplit(as.character(ann$gene_id), ":"), "[[", 2)))
+        
+        mart <- read.csv("../pip3-rna-seq-input/other-cell-lines/mart_export.txt", sep = "\t", header = TRUE)
+        mart <- mart[!is.na(mart$EntrezGene.ID),]
+        mart <- as.data.table(mart)
+        setkey(mart, "EntrezGene.ID")
+        
+        d1 <- d1[mart]
+        d1 <- d1[!is.na(counts)]
+}
+
 butterfly_paper_comparisons <- function() {
         # analysis of similarities of our results with the results of a new
         # paper: Hart, J. R. et al. The butterfly effect in cancer:
         # A single base mutation can remodel the cell.
         # Proc. Natl. Acad. Sci. U. S. A. 112, 1131–1136 (2015).
-        d <- read.csv("../pip3-rna-seq-input/GSE63452_mcf10a.vs.pik3ca.h1047r.csv", sep = ",")
+        d <- read.csv("../pip3-rna-seq-input/other-cell-lines/GSE63452_mcf10a.vs.pik3ca.h1047r.csv", sep = ",")
         # select only significant genes at 0hr time point: 3485 genes
         d1 <- d[d$X0hr.p.value < 0.05, ]
         d1 <- hgnc_symbol_to_ensembl_id(d1$gene)
         initialize_sets()
         venn(list("Butterfly" = d1$ensembl_gene_id, "Our KI" = ki, "Our PTEN" = pten),
              TRUE, "comparison-with-new-paper-0hr")
+        
+
+        
         # correlations between WTs and KIs
         count.matrix <- readRDS("../pip3-rna-seq-output/rds/count-matrix.rds")
         c <- count.matrix[,c(1:3, 58:60)]
