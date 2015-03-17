@@ -757,6 +757,11 @@ import_other_mcf10a_wt <- function(){
         
         d1 <- d1[mart]
         d1 <- d1[!is.na(counts)]
+        d1 <- d1[,list(Ensembl.Gene.ID, counts)]
+        
+        colnames(d) <- c("Ensembl.Gene.ID", "counts")
+        d <- rbind(as.data.frame(d1), as.data.frame(d))
+        return(d)
 }
 
 butterfly_paper_comparisons <- function() {
