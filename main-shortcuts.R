@@ -819,7 +819,7 @@ butterfly_paper_comparisons <- function() {
         
         # correlations between WTs and KIs
         count.matrix <- readRDS("../pip3-rna-seq-output/rds/count-matrix.rds")
-        c <- count.matrix[,c(1:3, 58:60)]
+        c <- count.matrix[,c(1:3, 40:42, 58:60)]
         c <- as.data.frame(c)
         c$ensembl_gene_id <- rownames(c)
         
@@ -833,23 +833,23 @@ butterfly_paper_comparisons <- function() {
         
         # plot a correlation matrix from a count matrix
         # calculate pearson's correlation coefficients
-        cor.matrix <- cor(as.matrix(t[,c(2:17)]), method = "pearson")
+        cor.matrix <- cor(as.matrix(t[,c(2:20)]), method = "pearson")
         # plot correlation matrix in a file with 'name'
         pdf(file = "../pip3-rna-seq-output/figures/cor-butterfly.pdf", w = 6, h = 6)
         heatmap.2(cor.matrix, Rowv = FALSE, Colv = FALSE, dendrogram = "none",
                   col=bluered(99), breaks = 100, trace = "none", keysize = 1.5, margins = c(10, 10))
         dev.off()
         
-        t1 <- scale(t[,c(2:17)], center = T, scale = T)
+        t1 <- scale(t[,c(2:20)], center = T, scale = T)
         
         res <- prcomp(t1)
         pdf(file = "../pip3-rna-seq-output/figures/pca-variances-butterfly.pdf", w=7, h=6)
         print(screeplot(res))
         dev.off()
-        data <- as.data.frame(res$rotation[,1:3])
         
-        data$Condition <- c("WT", "WT", "WT", "WT", "H1047R", "H1047R", "H1047R", "WT", "WT", "WT", "H1047R", "H1047R", "H1047R", "WT", "WT", "WT")
-        data$Paper <- c(rep("RWPE1", 3), "Klijn", rep("Vogt", 6), rep("Ours", 6))
+        data <- as.data.frame(res$rotation[,1:3])
+        data$Condition <- c("WT", "WT", "WT", "WT", "H1047R", "H1047R", "H1047R", "WT", "WT", "WT", "H1047R", "H1047R", "H1047R", "PTEN-/-", "PTEN-/-", "PTEN-/-", "WT", "WT", "WT")
+        data$Paper <- c(rep("RWPE1", 3), "Klijn", rep("Vogt", 6), rep("Ours", 9))
         p <- ggplot(data, aes(PC1,PC2, color = Condition)) +
                 geom_point(aes(shape = Paper)) +
                 theme_bw()
