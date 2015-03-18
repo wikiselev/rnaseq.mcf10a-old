@@ -1,7 +1,7 @@
 ---
 title: "Expected effect"
 author: "Vladimir Kiselev"
-date: "2 March 2015"
+date: "18 March 2015"
 output: pdf_document
 ---
 
@@ -15,12 +15,12 @@ initialize_sets()
 First, define genes with the expected effect. Expression of those genes should
 be affected by all pertrubations:
 
-```{r, echo=FALSE, fig.width=9, fig.height=6, fig.align='center'}
+```{r, echo=FALSE, fig.width=6, fig.height=4, fig.align='center'}
         v <- Venn(list("PTEN" = pten, "KI" = ki, "A66" = a66.tc.cond))
         plot(v, doWeights = TRUE)
 ```
 
-Now consider 136 genes from the green segment. Plot them first:
+Now consider 136 genes from the green segment.
 
 ```{r, echo=FALSE, cache=TRUE, fig.width=9, fig.height=6}
         plot_genes <- function(genes, norm) {
@@ -38,22 +38,22 @@ Now consider 136 genes from the green segment. Plot them first:
                 theme_bw()
                 print(p)
         }
-
-        l.p.genes <- pten[pten %in% ki & pten %in% a66.tc.cond]
-        plot_genes(l.p.genes[1:16], F)
-        plot_genes(l.p.genes[17:32], F)
-        plot_genes(l.p.genes[33:48], F)
-        plot_genes(l.p.genes[49:64], F)
-        plot_genes(l.p.genes[65:80], F)
-        plot_genes(l.p.genes[81:96], F)
-        plot_genes(l.p.genes[97:112], F)
-        plot_genes(l.p.genes[113:128], F)
-        plot_genes(l.p.genes[129:136], F)
+# 
+#         l.p.genes <- pten[pten %in% ki & pten %in% a66.tc.cond]
+#         plot_genes(l.p.genes[1:16], F)
+#         plot_genes(l.p.genes[17:32], F)
+#         plot_genes(l.p.genes[33:48], F)
+#         plot_genes(l.p.genes[49:64], F)
+#         plot_genes(l.p.genes[65:80], F)
+#         plot_genes(l.p.genes[81:96], F)
+#         plot_genes(l.p.genes[97:112], F)
+#         plot_genes(l.p.genes[113:128], F)
+#         plot_genes(l.p.genes[129:136], F)
 ```
 
 GO enrichment analysis on this gene set provides:
 
-```{r, echo=FALSE, cache=TRUE, fig.width=6, fig.height=3, fig.align='center'}
+```{r, echo=FALSE, cache=TRUE, fig.width=4, fig.height=2, fig.align='center'}
 plot_go_terms <- function(d, name, num) {
   d <- d[order(log10.p.value)]
   d$description <- factor(d$description, levels = rev(d$description))
@@ -181,35 +181,103 @@ plot_all_clusts(clusts, "len-phil-effect", c(0))
 
 Go enrichment analysis of the first cluster:
 
-```{r, echo=FALSE, cache=TRUE, fig.width=6, fig.height=3, fig.align='center'}
+```{r, echo=FALSE, cache=TRUE, fig.width=4, fig.height=2, fig.align='center'}
 len_phil_effect1 <- annotate_go_terms("len-phil-effect1-1")
 plot_go_terms(len_phil_effect1, "len-phil-effect1", 10)
 ```
 
 Go enrichment analysis of the second cluster:
 
-```{r, echo=FALSE, cache=TRUE, fig.width=6, fig.height=3, fig.align='center'}
+```{r, echo=FALSE, cache=TRUE, fig.width=4, fig.height=2, fig.align='center'}
+set1 <- names(clusts[[1]][clusts[[1]] == 1])
+set2 <- names(clusts[[1]][clusts[[1]] == 2])
 len_phil_effect2 <- annotate_go_terms("len-phil-effect1-2")
 plot_go_terms(len_phil_effect2, "len-phil-effect2", 10)
 ```
 
-Plot genes in the first cluster:
-
 ```{r, echo=FALSE, cache=TRUE, fig.width=9, fig.height=6}
-        l.p.genes <- names(clusts[[1]][clusts[[1]] == 1])
-        plot_genes(l.p.genes[1:16], F)
-        plot_genes(l.p.genes[17:32], F)
-        plot_genes(l.p.genes[33:48], F)
-        plot_genes(l.p.genes[49:64], F)
+#         l.p.genes <- names(clusts[[1]][clusts[[1]] == 1])
+#         plot_genes(l.p.genes[1:16], F)
+#         plot_genes(l.p.genes[17:32], F)
+#         plot_genes(l.p.genes[33:48], F)
+#         plot_genes(l.p.genes[49:64], F)
 ```
 
-Plot genes in the second cluster:
-
 ```{r, echo=FALSE, cache=TRUE, fig.width=9, fig.height=6}
-        l.p.genes <- names(clusts[[1]][clusts[[1]] == 2])
-        plot_genes(l.p.genes[1:16], F)
-        plot_genes(l.p.genes[17:32], F)
-        plot_genes(l.p.genes[33:48], F)
-        plot_genes(l.p.genes[49:64], F)
-        plot_genes(l.p.genes[65:72], F)
+#         l.p.genes <- names(clusts[[1]][clusts[[1]] == 2])
+#         plot_genes(l.p.genes[1:16], F)
+#         plot_genes(l.p.genes[17:32], F)
+#         plot_genes(l.p.genes[33:48], F)
+#         plot_genes(l.p.genes[49:64], F)
+#         plot_genes(l.p.genes[65:72], F)
+```
+
+Analysis of differentail activity of TFBMs in these two clusters:
+
+```{r, echo=FALSE, cache = TRUE, warning=FALSE, include=FALSE}
+set1 <- names(clusts[[1]][clusts[[1]] == 1])
+set2 <- names(clusts[[1]][clusts[[1]] == 2])
+t <- motif_diff_activity_new(set1, set2, "mut_up", "mut_down", "expected-effect")
+```
+
+![](../pip3-rna-seq-output/figures/motif-diff-activity-expected-effect.pdf)
+
+Genes regulated by GATA6.p2:
+
+```{r, echo=FALSE, results='asis', cache = TRUE}
+knitr::kable(t[motif == "GATA6.p2"])
+```
+
+```{r, echo=FALSE, cache=TRUE}
+plot_genes(t[motif == "GATA6.p2", target], F)
+```
+
+Genes regulated by HBP1_HMGB_SSRP1_UBTF.p2:
+
+```{r, echo=FALSE, results='asis', cache = TRUE}
+knitr::kable(t[motif == "HBP1_HMGB_SSRP1_UBTF.p2"])
+```
+
+```{r, echo=FALSE, cache=TRUE}
+plot_genes(t[motif == "HBP1_HMGB_SSRP1_UBTF.p2", target], F)
+```
+
+Genes regulated by PRDM1.p3:
+
+```{r, echo=FALSE, results='asis', cache = TRUE}
+knitr::kable(t[motif == "PRDM1.p3"])
+```
+
+```{r, echo=FALSE, cache=TRUE}
+plot_genes(t[motif == "PRDM1.p3", target], F)
+```
+
+Genes regulated by SRF.p3:
+
+```{r, echo=FALSE, results='asis', cache = TRUE}
+knitr::kable(t[motif == "SRF.p3"])
+```
+
+```{r, echo=FALSE, cache=TRUE}
+plot_genes(t[motif == "SRF.p3", target], F)
+```
+
+Genes regulated by UUUUUGC:
+
+```{r, echo=FALSE, results='asis', cache = TRUE}
+knitr::kable(t[motif == "UUUUUGC"])
+```
+
+```{r, echo=FALSE, cache=TRUE}
+plot_genes(t[motif == "UUUUUGC", target], F)
+```
+
+Genes regulated by ZNF384.p2:
+
+```{r, echo=FALSE, results='asis', cache = TRUE}
+knitr::kable(t[motif == "ZNF384.p2"])
+```
+
+```{r, echo=FALSE, cache=TRUE}
+plot_genes(t[motif == "ZNF384.p2", target], F)
 ```

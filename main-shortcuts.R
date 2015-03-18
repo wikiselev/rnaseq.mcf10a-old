@@ -67,13 +67,7 @@ process_raw_read_counts <- function() {
   saveRDS(count.matrix.scaled, "../pip3-rna-seq-output/rds/count-matrix-scaled.rds")
 
   # principal component analysis
-  pc
-  
-    open3d(windowRect=c(100,100,700,700))
-  plot3d(res$rotation,xlab="PC1",ylab="PC2",zlab="PC3")
-  spheres3d(res$rotation, radius=0.01,col=rainbow(length(res$rotation[,1])))
-  grid3d(side="z", at=list(z=0))
-  text3d(res$rotation, text=rownames(res$rotation), adj=1.3)a()
+  pca()
 
   # annotate genes in the count.matrix with associated gene names
   # file gene_names_GRCh37.p13.txt was downloaded from Ensembl Biomart on 06/07/14
