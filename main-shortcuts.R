@@ -743,7 +743,7 @@ import_other_mcf10a_wt <- function(){
         d1 <- read.csv("../pip3-rna-seq-input/other-cell-lines/140625_Klijn_counts_coding.txt", sep = "\t", header = TRUE)
         d1 <- as.data.table(d1)
         d1 <- d1[,list(geneID, Sample.73)]
-        colnames(d1) <- c("EntrezGene.ID", "counts")
+        setnames(d1, colnames(d1), c("EntrezGene.ID", "counts"))
         setkey(d1, "EntrezGene.ID")
         
         # ann <- read.csv("../pip3-rna-seq-input/other-cell-lines/140625_Klijn_geneToTranscript.txt", sep = "\t", header = TRUE)
@@ -759,8 +759,25 @@ import_other_mcf10a_wt <- function(){
         d1 <- d1[!is.na(counts)]
         d1 <- d1[,list(Ensembl.Gene.ID, counts)]
         
-        colnames(d) <- c("Ensembl.Gene.ID", "counts")
+        setnames(d, colnames(d), c("Ensembl.Gene.ID", "counts"))
         d <- rbind(as.data.frame(d1), as.data.frame(d))
+        colnames(d) <- c("ensembl_gene_id", "klijn_wt")
+        d[,2] <- as.numeric(d[,2])
+        return(d)
+}
+
+import_other_mcf10a_vogt <- function(){
+        # paper: Hart, J. R. et al. The butterfly effect in cancer:
+        # A single base mutation can remodel the cell.
+        # Proc. Natl. Acad. Sci. U. S. A. 112, 1131–1136 (2015).
+        d <- read.csv("../pip3-rna-seq-input/other-cell-lines/GSE63452_mcf10a.vs.pik3ca.h1047r.csv", sep = ",")
+        d <- d[,1:7]
+        gene.names <- hgnc_symbol_to_ensembl_id(d$gene)
+        colnames(gene.names)[2] <- "gene"
+        d <- merge(d, gene.names)
+        d <- d[,2:8]
+        colnames(d) <- c("vogt_h1047r_1", "vogt_h1047r_2", "vogt_h1047r_3",
+                         "vogt_wt_1", "vogt_wt_2", "vogt_wt_3", "ensembl_gene_id")
         return(d)
 }
 
@@ -771,42 +788,43 @@ butterfly_paper_comparisons <- function() {
         # Proc. Natl. Acad. Sci. U. S. A. 112, 1131–1136 (2015).
         d <- read.csv("../pip3-rna-seq-input/other-cell-lines/GSE63452_mcf10a.vs.pik3ca.h1047r.csv", sep = ",")
         # select only significant genes at 0hr time point: 3485 genes
-        d1 <- d[d$X0hr.p.value < 0.05, ]
-        d1 <- hgnc_symbol_to_ensembl_id(d1$gene)
+        d <- d[d$X0hr.p.value < 0.05, ]
+        d <- hgnc_symbol_to_ensembl_id(d$gene)
         initialize_sets()
-        venn(list("Butterfly" = d1$ensembl_gene_id, "Our KI" = ki, "Our PTEN" = pten),
+        venn(list("Butterfly" = d$ensembl_gene_id, "Our KI" = ki, "Our PTEN" = pten),
              TRUE, "comparison-with-new-paper-0hr")
-        
-
         
         # correlations between WTs and KIs
         count.matrix <- readRDS("../pip3-rna-seq-output/rds/count-matrix.rds")
         c <- count.matrix[,c(1:3, 58:60)]
         c <- as.data.frame(c)
         c$ensembl_gene_id <- rownames(c)
-        d2 <- d[,1:7]
-        gene.names <- hgnc_symbol_to_ensembl_id(d2$gene)
-        colnames(gene.names)[2] <- "gene"
-        d2 <- merge(d2, gene.names)
-        d2 <- merge(d2, c)
-        cor_heatmap(as.matrix(d2[,c(3:14)]), "test.pdf")
+        
+        mcf10a.klijn.wt <- import_other_mcf10a_wt()
+        mcf10a.vogt <- import_other_mcf10a_vogt()
+ 
+        t <- merge(mcf10a.vogt, c)
+        t <- merge(mcf10a.klijn.wt, t)
+        
         # plot a correlation matrix from a count matrix
         # calculate pearson's correlation coefficients
-        cor.matrix <- cor(as.matrix(d2[,c(3:14)]), method = "pearson")
+        cor.matrix <- cor(as.matrix(t[,c(2:14)]), method = "pearson")
         # plot correlation matrix in a file with 'name'
         pdf(file = "../pip3-rna-seq-output/figures/cor-butterfly.pdf", w = 6, h = 6)
         heatmap.2(cor.matrix, Rowv = FALSE, Colv = FALSE, dendrogram = "none",
                   col=bluered(99), breaks = 100, trace = "none", keysize = 1.5, margins = c(10, 10))
         dev.off()
         
-        res <- prcomp(as.matrix(d2[,c(3:14)]))
+        t1 <- scale(t[,c(2:14)], center = T, scale = T)
+        
+        res <- prcomp(t1)
         pdf(file = "../pip3-rna-seq-output/figures/pca-variances-butterfly.pdf", w=7, h=6)
         print(screeplot(res))
         dev.off()
         data <- as.data.frame(res$rotation[,1:3])
         
-        data$Condition <- c("KI", "KI", "KI", "WT", "WT", "WT", "KI", "KI", "KI", "WT", "WT", "WT")
-        data$Paper <- c(rep("Butterfly", 6), rep("Ours", 6))
+        data$Condition <- c("WT", "H1047R", "H1047R", "H1047R", "WT", "WT", "WT", "H1047R", "H1047R", "H1047R", "WT", "WT", "WT")
+        data$Paper <- c("Klijn", rep("Vogt", 6), rep("Ours", 6))
         p <- ggplot(data, aes(PC1,PC2, color = Condition)) +
                 geom_point(aes(shape = Paper)) +
                 theme_bw()
