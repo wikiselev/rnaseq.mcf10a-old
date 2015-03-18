@@ -228,7 +228,7 @@ Genes regulated by GATA6.p2:
 knitr::kable(t[motif == "GATA6.p2"])
 ```
 
-```{r, echo=FALSE, cache=TRUE}
+```{r, echo=FALSE, cache=TRUE, fig.width=3, fig.height=2}
 plot_genes(t[motif == "GATA6.p2", target], F)
 ```
 
@@ -238,7 +238,7 @@ Genes regulated by HBP1_HMGB_SSRP1_UBTF.p2:
 knitr::kable(t[motif == "HBP1_HMGB_SSRP1_UBTF.p2"])
 ```
 
-```{r, echo=FALSE, cache=TRUE}
+```{r, echo=FALSE, cache=TRUE, fig.width=9}
 plot_genes(t[motif == "HBP1_HMGB_SSRP1_UBTF.p2", target], F)
 ```
 
@@ -248,7 +248,7 @@ Genes regulated by PRDM1.p3:
 knitr::kable(t[motif == "PRDM1.p3"])
 ```
 
-```{r, echo=FALSE, cache=TRUE}
+```{r, echo=FALSE, cache=TRUE, fig.height=3}
 plot_genes(t[motif == "PRDM1.p3", target], F)
 ```
 
@@ -258,7 +258,7 @@ Genes regulated by SRF.p3:
 knitr::kable(t[motif == "SRF.p3"])
 ```
 
-```{r, echo=FALSE, cache=TRUE}
+```{r, echo=FALSE, cache=TRUE, fig.height=2}
 plot_genes(t[motif == "SRF.p3", target], F)
 ```
 
@@ -268,7 +268,7 @@ Genes regulated by UUUUUGC:
 knitr::kable(t[motif == "UUUUUGC"])
 ```
 
-```{r, echo=FALSE, cache=TRUE}
+```{r, echo=FALSE, cache=TRUE, fig.width=9}
 plot_genes(t[motif == "UUUUUGC", target], F)
 ```
 
@@ -278,6 +278,6 @@ Genes regulated by ZNF384.p2:
 knitr::kable(t[motif == "ZNF384.p2"])
 ```
 
-```{r, echo=FALSE, cache=TRUE}
+```{r, echo=FALSE, cache=TRUE, fig.width=9}
 plot_genes(t[motif == "ZNF384.p2", target], F)
 ```

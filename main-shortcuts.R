@@ -837,7 +837,7 @@ butterfly_paper_comparisons <- function() {
         t1 <- scale(t[,c(2:20)], center = T, scale = T)
         
         res <- prcomp(t1)
-        pdf(file = "../pip3-rna-seq-output/figures/pca-variances-butterfly.pdf", w=7, h=6)
+        pdf(file = "../pip3-rna-seq-output/figures/pca-variances-butterfly.pdf", w=4, h=3)
         print(screeplot(res))
         dev.off()
         
@@ -845,19 +845,19 @@ butterfly_paper_comparisons <- function() {
         data$Condition <- c("WT", "WT", "WT", "WT", "H1047R", "H1047R", "H1047R", "WT", "WT", "WT", "H1047R", "H1047R", "H1047R", "PTEN-/-", "PTEN-/-", "PTEN-/-", "WT", "WT", "WT")
         data$Paper <- c(rep("RWPE1", 3), "Klijn", rep("Vogt", 6), rep("Ours", 9))
         p <- ggplot(data, aes(PC1,PC2, color = Condition)) +
-                geom_point(aes(shape = Paper)) +
+                geom_point(aes(shape = Paper, size = 2)) +
                 theme_bw()
         pdf(file = "../pip3-rna-seq-output/figures/pca12-butterfly.pdf", w=5, h=4)
         print(p)
         dev.off()
         p <- ggplot(data, aes(PC1,PC3, color = Condition)) +
-                geom_point(aes(shape = Paper)) +
+                geom_point(aes(shape = Paper, size = 2)) +
                 theme_bw()
         pdf(file = "../pip3-rna-seq-output/figures/pca13-butterfly.pdf", w=5, h=4)
         print(p)
         dev.off()
         p <- ggplot(data, aes(PC2,PC3, color = Condition)) +
-                geom_point(aes(shape = Paper)) +
+                geom_point(aes(shape = Paper, size = 2)) +
                 theme_bw()
         pdf(file = "../pip3-rna-seq-output/figures/pca23-butterfly.pdf", w=5, h=4)
         print(p)
