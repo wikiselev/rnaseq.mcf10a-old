@@ -912,4 +912,9 @@ prepare_data_for_len_phil_effect <- function(){
              TRUE, "comparison-with-new-paper-expected-effect")
         plot_genes(l.p.genes[l.p.genes %in% d1$ensembl_gene_id], F, "len-phil-effect-in-butterfly")
         plot_genes(l.p.genes[!l.p.genes %in% d1$ensembl_gene_id], F, "len-phil-effect-not-in-butterfly")
+        
+        # analysis of differential activity of motifs
+        set1 <- names(clusts[[1]][clusts[[1]] == 1])
+        set2 <- names(clusts[[1]][clusts[[1]] == 2])
+        t <- motif_diff_activity_new(set1, set2, "mut_up", "mut_down", "expected-effect")
 }
