@@ -22,6 +22,9 @@ library(sqldf)
 library(fpc)
 library(GOSemSim)
 library(rgl)
+library(oligo)
+library(affy)
+library(hugene10sttranscriptcluster.db)
 
 options(stringsAsFactors = F)
 
