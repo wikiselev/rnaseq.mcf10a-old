@@ -912,3 +912,67 @@ prepare_data_for_len_phil_effect <- function(){
         set2 <- names(clusts[[1]][clusts[[1]] == 2])
         t <- motif_diff_activity_new(set1, set2, "mut_up", "mut_down", "expected-effect")
 }
+
+butterfly_genes_vs_our_expected_effect <- function() {
+        l.p.genes <- pten[pten %in% ki & pten %in% a66.tc.cond]
+        d <- read.csv("../pip3-rna-seq-input/other-cell-lines/GSE63452_mcf10a.vs.pik3ca.h1047r.csv", sep = ",")
+        d <- d[d$X0hr.p.value < 0.05, ]
+        t <- hgnc_symbol_to_ensembl_id(d$gene)
+        t <- d[d$gene %in% t[t$ensembl_gene_id %in% l.p.genes,]$hgnc_symbol, ]
+        t <- t[,c(1:26)]
+        t$H1047R.0hr.mean <- rowMeans(subset(t, select = c(H1047R.0hr.1, H1047R.0hr.2, H1047R.0hr.3)))
+        t$H1047R.0hr.sd <- rowSds(as.matrix(subset(t, select = c(H1047R.0hr.1, H1047R.0hr.2, H1047R.0hr.3))))
+        t$H1047R.6hr.mean <- rowMeans(subset(t, select = c(H1047R.6hr.1, H1047R.6hr.2, H1047R.6hr.3)))
+        t$H1047R.6hr.sd <- rowSds(as.matrix(subset(t, select = c(H1047R.6hr.1, H1047R.6hr.2, H1047R.6hr.3))))
+        t$H1047R.12hr.mean <- rowMeans(subset(t, select = c(H1047R.12hr.1, H1047R.12hr.2, H1047R.12hr.3)))
+        t$H1047R.12hr.sd <- rowSds(as.matrix(subset(t, select = c(H1047R.12hr.1, H1047R.12hr.2, H1047R.12hr.3))))
+        t$H1047R.24hr.mean <- rowMeans(subset(t, select = c(H1047R.24hr.1, H1047R.24hr.2, H1047R.24hr.3)))
+        t$H1047R.24hr.sd <- rowSds(as.matrix(subset(t, select = c(H1047R.24hr.1, H1047R.24hr.2, H1047R.24hr.3))))
+        t$WT.0hr.mean <- rowMeans(subset(t, select = c(WT.0hr.1, WT.0hr.2, WT.0hr.3)))
+        t$WT.0hr.sd <- rowSds(as.matrix(subset(t, select = c(WT.0hr.1, WT.0hr.2, WT.0hr.3))))
+        t$WT.6hr.mean <- rowMeans(subset(t, select = c(WT.6hr.1, WT.6hr.2, WT.6hr.3)))
+        t$WT.6hr.sd <- rowSds(as.matrix(subset(t, select = c(WT.6hr.1, WT.6hr.2, WT.6hr.3))))
+        t$WT.12hr.mean <- rowMeans(subset(t, select = c(WT.12hr.1, WT.12hr.2, WT.12hr.3)))
+        t$WT.12hr.sd <- rowSds(as.matrix(subset(t, select = c(WT.12hr.1, WT.12hr.2, WT.12hr.3))))
+        t$WT.24hr.mean <- rowMeans(subset(t, select = c(WT.24hr.1, WT.24hr.2, WT.24hr.3)))
+        t$WT.24hr.sd <- rowSds(as.matrix(subset(t, select = c(WT.24hr.1, WT.24hr.2, WT.24hr.3))))
+        t <- t[,c(1, 27:42)]
+        t.plot <- t[,c(1:3)]
+        t.plot$cond <- "H1047R"
+        t.plot$time <- 0
+        colnames(t.plot)[2] <- "value"
+        colnames(t.plot)[3] <- "sd"
+        t.plot <- rbind(t.plot, data.frame(gene = t[,1], value = t[,4], sd = t[,5], cond = "H1047R", time = 6))
+        t.plot <- rbind(t.plot, data.frame(gene = t[,1], value = t[,6], sd = t[,7], cond = "H1047R", time = 12))
+        t.plot <- rbind(t.plot, data.frame(gene = t[,1], value = t[,8], sd = t[,9], cond = "H1047R", time = 24))
+        t.plot <- rbind(t.plot, data.frame(gene = t[,1], value = t[,10], sd = t[,11], cond = "WT", time = 0))
+        t.plot <- rbind(t.plot, data.frame(gene = t[,1], value = t[,12], sd = t[,13], cond = "WT", time = 6))
+        t.plot <- rbind(t.plot, data.frame(gene = t[,1], value = t[,14], sd = t[,15], cond = "WT", time = 12))
+        t.plot <- rbind(t.plot, data.frame(gene = t[,1], value = t[,16], sd = t[,17], cond = "WT", time = 24))
+        
+        t.plot.our <- get_plot_data(l.p.genes, F)[[1]]
+        t.plot.our <- t.plot.our[,c(2:5,8)]
+        colnames(t.plot.our)[5] <- "gene"
+        t.plot.our[t.plot.our$cond == "ki",]$cond <- "H1047R"
+        t.plot.our[t.plot.our$cond == "pten",]$cond <- "PTEN-/-"
+        t.plot.our[t.plot.our$cond == "wt",]$cond <- "WT"
+        t.plot.our[t.plot.our$cond == "a66",]$cond <- "A66"
+        t.plot.our[t.plot.our$cond == "a66_nost",]$cond <- "A66_nost"
+        t.plot.our$paper <- "OUR"
+        t.plot$paper <- "VOGT"
+        t.plot.our <- t.plot.our[,c(5,3,4,1,2,6)]
+        res <- rbind(t.plot, t.plot.our)
+        
+        limits <- aes(ymax = value + sd, ymin = value - sd)
+        
+        p <- ggplot(res, aes(time, value, group = cond, color = cond)) +
+                geom_line(size = 1) +
+                geom_point(size = 3) +
+                facet_grid(gene ~ paper, scale = "free") +
+                geom_errorbar(limits, size = 0.5, width = 5) +
+                labs(x = "Time, min (left) and hours (right)", y = "Read counts") +
+                theme_bw()
+        pdf(file = "../pip3-rna-seq-output/figures/genes-expected-vogt-ours.pdf", width = 6, height = 120)
+        print(p)
+        dev.off()
+}
