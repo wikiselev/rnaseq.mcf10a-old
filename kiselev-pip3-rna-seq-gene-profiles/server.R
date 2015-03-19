@@ -6,12 +6,8 @@ shinyServer(
         function(input, output) {
                 # this will load the data only once when the webpage is open
                 d <- readRDS("data/plot-data.rds")
-                data <- reactive({
-                        if(input$checkbox) {
-                                d <- d[d$norm_by_glength]
-                        } else {
-                                d <- d[!d$norm_by_glength]
-                        }
+                glens <- readRDS("data/gene-lengths.rds")
+                validateFunction <- function() {
                         validate(
                                 need(input$geneName != "",
                                      "Please type in your Gene")
@@ -20,10 +16,15 @@ shinyServer(
                                 need((toupper(input$geneName) %in% d$id) | (toupper(input$geneName) %in% d$hgnc_symbol),
                                      "Your gene is not in our list. We only accept HGNC symbols and Ensembl IDs. Please check that your gene name is either of the above...")
                         )
-                        d[(d$id %in% toupper(input$geneName)) | (d$hgnc_symbol %in% toupper(input$geneName))]
-                })
+                }
                 plotFunction <- function(dat) {
-                        limits <- aes(ymax = ymax, ymin = ymin)
+                        if(input$checkbox) {
+                                validateFunction()
+                                length <- unique(glens[glens$ensembl_gene_id == unique(dat$id),]$gene_length)
+                                dat$value <- dat$value/length
+                                dat$sd <- dat$sd/length
+                        }
+                        limits <- aes(ymax = value + sd, ymin = value - sd)
                         ggplot(dat, aes(time, value, group = Condition, color = Condition)) +
                                 geom_line(size = 1) +
                                 geom_point(size = 3) +
@@ -32,6 +33,10 @@ shinyServer(
                                 labs(x = "Time, min", y = "Read counts") +
                                 theme_bw()
                 }
+                data <- reactive({
+                        validateFunction()
+                        d[(d$id %in% toupper(input$geneName)) | (d$hgnc_symbol %in% toupper(input$geneName))]
+                })
                 # the function below will be executed each time a user presses goButton
                 output$plot <- renderPlot({
                         plotFunction(data())
