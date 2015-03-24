@@ -1,100 +1,97 @@
 process_raw_read_counts <- function() {
-  # create a count matrix from raw counts produced by htseq_count
-  files <- list.files("../pip3-rna-seq-input/htseq-read-count-raw", full.names = FALSE)
-  count.matrix <- count_matrix_from_files(files, F)
-  count.matrix <- arrange_count_matrix_columns(count.matrix)
-  # plot correlation heatmap of count.matrix
-  cor_heatmap(count.matrix, "cor-mat-raw-with-bad-rep.pdf")
+        # create a count matrix from raw counts produced by htseq_count
+        files <- list.files("../pip3-rna-seq-input/htseq-read-count-raw", full.names = FALSE)
+        count.matrix <- count_matrix_from_files(files, F)
+        count.matrix <- arrange_count_matrix_columns(count.matrix)
+        # plot correlation heatmap of count.matrix
+        cor_heatmap(count.matrix, "cor-mat-raw-with-bad-rep.pdf")
+        
+        # remove bad replicates: wt_3_40 and wt_4_40
+        files <- files[!grepl("wt_3_40", files)]
+        files <- files[!grepl("wt_4_40", files)]
+        files <- files[!grepl("wt_3_0", files)]
+        
+        count.matrix <- count_matrix_from_files(files, F)
+        count.matrix <- arrange_count_matrix_columns(count.matrix)
+        # plot correlation heatmap of count.matrix
+        cor_heatmap(count.matrix, "cor-mat-raw.pdf")
+        # now correlation heatmap looks much better!
+        
+        # change colnames for b replicates from "wtb" to "wt"
+        cn <- colnames(count.matrix)
+        cn[grepl("wtb", cn)] <- 
+        c("wt_3b_0", "wt_3b_40", "wt_4b_40")
+        colnames(count.matrix) <- cn
+        
+        # I talked to Simon Andrews - he said that removing lowly-expressed
+        # genes by rowsums or any other method can be risky and DESeq2 will anyway
+        # remove all those genes using negative binomial distribution.
+        # So, finally I only remove genes which are not expressed in any condition
+        # (count.matrix[rowSums(count.matrix) > 0, ]) and this will be the data set
+        # which I use in the further analysis.
+        
+        # remove all 0-expressed genes
+        count.matrix <- count.matrix[rowSums(count.matrix) > 0, ]
+        
+        # convert count.matrix into data.table
+        dat <- count_matrix_2_data_table(count.matrix)
+        # check read density distribution and cumulative distribution
+        plot_read_density(dat, "raw")
+        plot_read_ecdf(dat, "raw")
+        # read distributions of different samples are different
+        # let's now use a count.matrix normalized by the library size
+        
+        # normalize read counts by library size using DESeq2 estimateSizeFactors function
+        count.matrix <- count_matrix_from_files(files, T)
+        count.matrix <- arrange_count_matrix_columns(count.matrix)
+        # plot correlation heatmap of count.matrix
+        cor_heatmap(count.matrix, "cor-mat-raw-norm.pdf")
+        # normalization does not change correlation -- this is a sanity check!
+        
+        # change colnames for b replicates from "wtb" to "wt"
+        cn <- colnames(count.matrix)
+        cn[grepl("wtb", cn)] <- 
+        c("wt_3b_0", "wt_3b_40", "wt_4b_40")
+        colnames(count.matrix) <- cn
+        # remove all 0-expressed genes
+        count.matrix <- count.matrix[rowSums(count.matrix) > 0, ]
+        # convert count.matrix into data.table
+        dat <- count_matrix_2_data_table(count.matrix)
+        # check read density distribution and cumulative distribution
+        plot_read_density(dat, "norm")
+        plot_read_ecdf(dat, "norm")
+        # now distributions are much better! Normalized count.matrix can be saved:
+        saveRDS(count.matrix, "../pip3-rna-seq-output/rds/count-matrix.rds")
+        # scale and center count matrix -- needed for svd analysis and for clustering
+        count.matrix.scaled <- t(scale(t(count.matrix), center = T, scale = T))
+        saveRDS(count.matrix.scaled, "../pip3-rna-seq-output/rds/count-matrix-scaled.rds")
+        
+        # principal component analysis
+        pca()
+        
+        # annotate genes in the count.matrix with associated gene names
+        # file gene_names_GRCh37.p13.txt was downloaded from Ensembl Biomart on 06/07/14
+        gene.ann <- read.csv("../pip3-rna-seq-input/annotations/gene-names-GRCh37.p13.txt")
+        colnames(gene.ann) <- c("ensembl_gene_id", "hgnc_symbol")
+        res <- data.frame(ensembl_gene_id = rownames(count.matrix))
+        res <- merge(res, gene.ann)
+        saveRDS(res, "../pip3-rna-seq-output/rds/count-matrix-ann.rds")
+        
+        # Average all replicates at each condition and each time point and
+        # create data table for plotting
+        ave_repl(count.matrix, "")
+        ave_repl(count.matrix.scaled, "-scaled")
 
-  # remove bad replicates: wt_3_40 and wt_4_40
-  files <- files[!grepl("wt_3_40", files)]
-  files <- files[!grepl("wt_4_40", files)]
-  files <- files[!grepl("wt_3_0", files)]
-
-  count.matrix <- count_matrix_from_files(files, F)
-  count.matrix <- arrange_count_matrix_columns(count.matrix)
-  # plot correlation heatmap of count.matrix
-  cor_heatmap(count.matrix, "cor-mat-raw.pdf")
-  # now correlation heatmap looks much better!
-
-  # change colnames for b replicates from "wtb" to "wt"
-  cn <- colnames(count.matrix)
-  cn[grepl("wtb", cn)] <- 
-    c("wt_3b_0", "wt_3b_40", "wt_4b_40")
-  colnames(count.matrix) <- cn
-
-  # I talked to Simon Andrews - he said that removing lowly-expressed
-  # genes by rowsums or any other method can be risky and DESeq2 will anyway
-  # remove all those genes using negative binomial distribution.
-  # So, finally I only remove genes which are not expressed in any condition
-  # (count.matrix[rowSums(count.matrix) > 0, ]) and this will be the data set
-  # which I use in the further analysis.
-
-  # remove all 0-expressed genes
-  count.matrix <- count.matrix[rowSums(count.matrix) > 0, ]
-
-  # convert count.matrix into data.table
-  dat <- count_matrix_2_data_table(count.matrix)
-  # check read density distribution and cumulative distribution
-  plot_read_density(dat, "raw")
-  plot_read_ecdf(dat, "raw")
-  # read distributions of different samples are different
-  # let's now use a count.matrix normalized by the library size
-
-  # normalize read counts by library size using DESeq2 estimateSizeFactors function
-  count.matrix <- count_matrix_from_files(files, T)
-  count.matrix <- arrange_count_matrix_columns(count.matrix)
-  # plot correlation heatmap of count.matrix
-  cor_heatmap(count.matrix, "cor-mat-raw-norm.pdf")
-  # normalization does not change correlation -- this is a sanity check!
-
-  # change colnames for b replicates from "wtb" to "wt"
-  cn <- colnames(count.matrix)
-  cn[grepl("wtb", cn)] <- 
-    c("wt_3b_0", "wt_3b_40", "wt_4b_40")
-  colnames(count.matrix) <- cn
-  # remove all 0-expressed genes
-  count.matrix <- count.matrix[rowSums(count.matrix) > 0, ]
-  # convert count.matrix into data.table
-  dat <- count_matrix_2_data_table(count.matrix)
-  # check read density distribution and cumulative distribution
-  plot_read_density(dat, "norm")
-  plot_read_ecdf(dat, "norm")
-  # now distributions are much better! Normalized count.matrix can be saved:
-  saveRDS(count.matrix, "../pip3-rna-seq-output/rds/count-matrix.rds")
-  # scale and center count matrix -- needed for svd analysis and for clustering
-  count.matrix.scaled <- t(scale(t(count.matrix), center = T, scale = T))
-  saveRDS(count.matrix.scaled, "../pip3-rna-seq-output/rds/count-matrix-scaled.rds")
-
-  # principal component analysis
-  pca()
-
-  # annotate genes in the count.matrix with associated gene names
-  # file gene_names_GRCh37.p13.txt was downloaded from Ensembl Biomart on 06/07/14
-  gene.ann <- read.csv("../pip3-rna-seq-input/annotations/gene-names-GRCh37.p13.txt")
-  colnames(gene.ann) <- c("ensembl_gene_id", "hgnc_symbol")
-  res <- data.frame(ensembl_gene_id = rownames(count.matrix))
-  res <- merge(res, gene.ann)
-  saveRDS(res, "../pip3-rna-seq-output/rds/count-matrix-ann.rds")
-  
-  # I also average all replicates at each condition and each time point
-  ave_repl(count.matrix, "")
-  ave_repl(count.matrix.scaled, "-scaled")
-
-  # normalize genes by their lengths
-  # file gene_lengths_GRCh37.p13.txt was downloaded from Ensembl Biomart on 06/07/14
-  gene.len <- read.csv("../pip3-rna-seq-input/annotations/gene-lengths-GRCh37.p13.txt")
-  colnames(gene.len) <- c("ensembl_gene_id", "gene_start", "gene_end")
-  gene.len$gene_length <- abs(gene.len$gene_end - gene.len$gene_start)
-  res <- data.frame(ensembl_gene_id = rownames(count.matrix))
-  res <- merge(res, gene.len[ , c(1, 4)])
-
-  # I multiply everything by 100 to shift distribution of values to 0:
-  # hist(log10( count.matrix / res$gene_length * 100))
-  count.matrix.by.length <- count.matrix / res$gene_length * 100
-  res <- average_count_matrix(count.matrix.by.length, conditions)
-  plot.data.all <- create_plot_table(res[[1]], res[[2]])
-  saveRDS(plot.data.all, "../pip3-rna-seq-output/rds/plot-time-courses-all-genes-norm-by-length.rds")
+        # normalize genes by their lengths
+        # file gene_lengths_GRCh37.p13.txt was downloaded from Ensembl Biomart on 06/07/14
+        gene.len <- read.csv("../pip3-rna-seq-input/annotations/gene-lengths-GRCh37.p13.txt")
+        colnames(gene.len) <- c("ensembl_gene_id", "gene_start", "gene_end")
+        gene.len$gene_length <- abs(gene.len$gene_end - gene.len$gene_start)
+        res <- data.frame(ensembl_gene_id = rownames(count.matrix))
+        res <- merge(res, gene.len[ , c(1, 4)])
+        
+        # normalise gene expression values by gene lengths
+        ave_repl(count.matrix / res$gene_length, "-norm-by-length")
 }
 
 initialize_sets <- function() {
