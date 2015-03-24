@@ -92,6 +92,36 @@ process_raw_read_counts <- function() {
         
         # normalise gene expression values by gene lengths
         ave_repl(count.matrix / res$gene_length, "-norm-by-length")
+        
+
+        
+        d <- read.table("../pip3-rna-seq-input/annotations/genes.gtf", sep = '\t', header = F)
+        exons <- d[which( d[,3] == 'exon' ),]
+
+        
+        gene.ids <- exons[,9]
+        gene.ids <- unlist(sapply(strsplit(as.character(gene.ids), "; "), "[[", 4))
+        gene.ids <- unlist(sapply(strsplit(as.character(gene.ids), " "), "[[", 2))
+        
+        map.regions = GRanges(
+                seqnames=exons[,1],
+                ranges=IRanges(exons[,4],
+                               exons[,5]),
+                strand=exons[,7],
+                ensembl_gene_id=gene.ids
+        )
+        
+        map.regions <- unique(map.regions)
+        
+        map.lengths <- NULL
+        for(g in unique(map.regions$ensembl_gene_id)) {
+                r <- reduce(map.regions[map.regions$ensembl_gene_id == g, ])
+                len <- sum(end(r) - start(r))
+                map.lengths <- rbind(map.lengths, data.frame(g, len))jmh n
+        }
+        
+        colnames(map.lengths) <- c("ensembl_gene_id", "exon_map_length")
+        write.csv(map.lengths, "../pip3-rna-seq-input/annotations/exon-map-lengths.csv", quote = F, row.names = F)
 }
 
 initialize_sets <- function() {
