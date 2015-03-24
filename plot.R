@@ -1,75 +1,75 @@
 ensembl_id_to_hgnc_symbol <- function(genes) {
-  mart <- readRDS("../pip3-rna-seq-output/rds/count-matrix-ann.RDS")
-  res <- unique(mart[mart$ensembl_gene_id %in% genes, 1:2])
-  res <- res[res$hgnc_symbol != "", ]
-  return(res)
+        mart <- readRDS("../pip3-rna-seq-output/rds/count-matrix-ann.RDS")
+        res <- unique(mart[mart$ensembl_gene_id %in% genes, 1:2])
+        res <- res[res$hgnc_symbol != "", ]
+        return(res)
 }
 
 hgnc_symbol_to_ensembl_id <- function(genes) {
-  mart <- readRDS("../pip3-rna-seq-output/rds/count-matrix-ann.RDS")
-  res <- unique(mart[mart$hgnc_symbol %in% genes, 1:2])
-  # res <- res[res$ensembl_gene_id != "", ]
-  return(res)
+        mart <- readRDS("../pip3-rna-seq-output/rds/count-matrix-ann.RDS")
+        res <- unique(mart[mart$hgnc_symbol %in% genes, 1:2])
+        # res <- res[res$ensembl_gene_id != "", ]
+        return(res)
 }
 
 get_plot_data <- function(genes, norm) {
-  # if genes are represented by ensembl ids
-  if(grepl("ENSG000", genes[1])){
-    res <- ensembl_id_to_hgnc_symbol(genes)
-  } else {
-    res <- hgnc_symbol_to_ensembl_id(genes)
-  }
-  colnames(res) <- c("id", "name")
-  
-  if(norm) {
-    plot.data <- readRDS("../pip3-rna-seq-output/rds/plot-time-courses-all-genes-norm-by-length.rds")
-  } else {
-    plot.data <- readRDS("../pip3-rna-seq-output/rds/plot-time-courses-all-genes.rds")
-  }
-  plot.data <- plot.data[plot.data$id %in% res$id, ]
-  plot.data <- merge(plot.data, res)
-  return(list(plot.data, res))
+        # if genes are represented by ensembl ids
+        if(grepl("ENSG000", genes[1])){
+        res <- ensembl_id_to_hgnc_symbol(genes)
+        } else {
+        res <- hgnc_symbol_to_ensembl_id(genes)
+        }
+        colnames(res) <- c("id", "name")
+        
+        if(norm) {
+        plot.data <- readRDS("../pip3-rna-seq-output/rds/plot-time-courses-all-genes-norm-by-length.rds")
+        } else {
+        plot.data <- readRDS("../pip3-rna-seq-output/rds/plot-time-courses-all-genes.rds")
+        }
+        plot.data <- plot.data[plot.data$id %in% res$id, ]
+        plot.data <- merge(plot.data, res)
+        return(list(plot.data, res))
 }
 
 plot_genes <- function(genes, norm, s) {
-  plot.data <- get_plot_data(genes, norm)[[1]]
-  res <- get_plot_data(genes, norm)[[2]]
-
-  limits <- aes(ymax = ymax, ymin = ymin)
-
-  p <- ggplot(plot.data, aes(time, value, group = cond, color = cond)) +
+        plot.data <- get_plot_data(genes, norm)[[1]]
+        res <- get_plot_data(genes, norm)[[2]]
+        
+        limits <- aes(ymax = ymax, ymin = ymin)
+        
+        p <- ggplot(plot.data, aes(time, value, group = cond, color = cond)) +
         geom_line(size = 1) +
         geom_point(size = 3) +
         facet_wrap(~ name, scale = "free_y") +
         geom_errorbar(limits, size = 0.5, width = 5) +
         labs(x = "Time, min", y = "Read counts") +
         theme_bw()
-  if(norm) {
-    file.name <- paste0("../pip3-rna-seq-output/figures/genes-norm-", s, ".pdf")
-  } else {
-    file.name <- paste0("../pip3-rna-seq-output/figures/genes-", s, ".pdf")
-  }
-  pdf(file = file.name,
-    width = (sqrt(length(res$name)) + 2)*3,
-    height = sqrt(length(res$name))*3)
-  print(p)
-  dev.off()
+        if(norm) {
+        file.name <- paste0("../pip3-rna-seq-output/figures/genes-norm-", s, ".pdf")
+        } else {
+        file.name <- paste0("../pip3-rna-seq-output/figures/genes-", s, ".pdf")
+        }
+        pdf(file = file.name,
+        width = (sqrt(length(res$name)) + 2)*3,
+        height = sqrt(length(res$name))*3)
+        print(p)
+        dev.off()
 }
 
 plot_prmd1_genes <- function(genes, norm, s) {
-  plot.data <- get_plot_data(genes, norm)[[1]]
-  res <- get_plot_data(genes, norm)[[2]]
-
-  limits <- aes(ymax = ymax, ymin = ymin)
-
-  plot.data$name <- factor(plot.data$name, levels = genes)
-
-  p <- ggplot(plot.data,
-    aes(time, value, group = cond, color = cond)) +
-      geom_point(data = plot.data[plot.data$name %in% genes & plot.data$time == 300 & plot.data$cond == "a66_nost",]) +
-      geom_line() + facet_grid(name~., scale = "free") +
-      geom_errorbar(limits, width = 0.25) +
-      theme(axis.title.x=element_blank(),
+        plot.data <- get_plot_data(genes, norm)[[1]]
+        res <- get_plot_data(genes, norm)[[2]]
+        
+        limits <- aes(ymax = ymax, ymin = ymin)
+        
+        plot.data$name <- factor(plot.data$name, levels = genes)
+        
+        p <- ggplot(plot.data,
+        aes(time, value, group = cond, color = cond)) +
+        geom_point(data = plot.data[plot.data$name %in% genes & plot.data$time == 300 & plot.data$cond == "a66_nost",]) +
+        geom_line() + facet_grid(name~., scale = "free") +
+        geom_errorbar(limits, width = 0.25) +
+        theme(axis.title.x=element_blank(),
             axis.title.y=element_blank(),
             axis.text=element_text(size = 7),
             legend.position="none",
@@ -77,17 +77,17 @@ plot_prmd1_genes <- function(genes, norm, s) {
             panel.background=element_blank(),
             strip.text = element_blank(),
             strip.background = element_blank())
-      # theme_tufte()
-  if(norm) {
-    file.name <- paste0("../pip3-rna-seq-output/figures/genes-norm-", s, ".pdf")
-  } else {
-    file.name <- paste0("../pip3-rna-seq-output/figures/genes-", s, ".pdf")
-  }
-  pdf(file = file.name,
-    width = 2,
-    height = 10)
-  print(p)
-  dev.off()
+        # theme_tufte()
+        if(norm) {
+        file.name <- paste0("../pip3-rna-seq-output/figures/genes-norm-", s, ".pdf")
+        } else {
+        file.name <- paste0("../pip3-rna-seq-output/figures/genes-", s, ".pdf")
+        }
+        pdf(file = file.name,
+        width = 2,
+        height = 10)
+        print(p)
+        dev.off()
 }
 
 # plot_prmd1_genes_multiple <- function(genes, norm, s) {

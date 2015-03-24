@@ -290,3 +290,7 @@ for(f in files) {
 butterfly_paper_comparisons()
 heatmap_ismara_activities()
 prepare_data_for_len_phil_effect()
+
+# table 2 in the paper
+d <- read.csv("../pip3-rna-seq-output/rds/prdm1-targets.csv")
+plot_prmd1_genes(d$Motif.target.gene, T, "prdm1-targets")
