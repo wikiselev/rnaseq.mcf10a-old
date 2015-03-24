@@ -56,7 +56,7 @@ plot_genes <- function(genes, norm, s) {
         dev.off()
 }
 
-plot_prmd1_genes <- function(genes, norm, s) {
+plot_prdm1_genes <- function(genes, norm, s) {
         plot.data <- get_plot_data(genes, norm)[[1]]
         res <- get_plot_data(genes, norm)[[2]]
         
@@ -90,7 +90,7 @@ plot_prmd1_genes <- function(genes, norm, s) {
         dev.off()
 }
 
-# plot_prmd1_genes_multiple <- function(genes, norm, s) {
+# plot_prdm1_genes_multiple <- function(genes, norm, s) {
 #   plot.data <- get_plot_data(genes, norm)[[1]]
 #   res <- get_plot_data(genes, norm)[[2]]
 
