@@ -94,11 +94,11 @@ process_raw_read_counts <- function() {
         ave_repl(count.matrix / res$gene_length, "-norm-by-length")
         
 
-        
+        # alternative normalisation - by the total length of all exons in a given gene
+        # warning - takes quite a lot of time to calculate the map.lengths!!!
         d <- read.table("../pip3-rna-seq-input/annotations/genes.gtf", sep = '\t', header = F)
         exons <- d[which( d[,3] == 'exon' ),]
 
-        
         gene.ids <- exons[,9]
         gene.ids <- unlist(sapply(strsplit(as.character(gene.ids), "; "), "[[", 4))
         gene.ids <- unlist(sapply(strsplit(as.character(gene.ids), " "), "[[", 2))
@@ -117,11 +117,16 @@ process_raw_read_counts <- function() {
         for(g in unique(map.regions$ensembl_gene_id)) {
                 r <- reduce(map.regions[map.regions$ensembl_gene_id == g, ])
                 len <- sum(end(r) - start(r))
-                map.lengths <- rbind(map.lengths, data.frame(g, len))jmh n
+                map.lengths <- rbind(map.lengths, data.frame(g, len))
         }
         
         colnames(map.lengths) <- c("ensembl_gene_id", "exon_map_length")
         write.csv(map.lengths, "../pip3-rna-seq-input/annotations/exon-map-lengths.csv", quote = F, row.names = F)
+
+        map.lengths <- map.lengths[map.lengths$ensembl_gene_id %in% rownames(count.matrix),]
+        map.lengths <- map.lengths[order(map.lengths$ensembl_gene_id),]
+
+        ave_repl(count.matrix[rownames(count.matrix) %in% map.lengths$ensembl_gene_id,] / map.lengths$exon_map_length * 1e9 / mean(colSums(count.matrix)), "-norm-by-length-exon-rpkm")
 }
 
 initialize_sets <- function() {
@@ -793,6 +798,27 @@ import_other_mcf10a_wt <- function(){
         return(d)
 }
 
+import_other_mcf10a_pten <- function(){
+        d <- read.csv("../pip3-rna-seq-input/other-cell-lines/MCF10A_PTEN_expression.txt", sep = "\t", header = TRUE)
+        d <- as.data.table(d)
+        setnames(d, colnames(d), c("counts", "rpkm", "EntrezGene.ID"))
+        setkey(d, "EntrezGene.ID")
+        
+        mart <- read.csv("../pip3-rna-seq-input/other-cell-lines/mart_export.txt", sep = "\t", header = TRUE)
+        mart <- mart[!is.na(mart$EntrezGene.ID),]
+        mart <- as.data.table(mart)
+        setkey(mart, "EntrezGene.ID")
+        
+        d <- d[mart]
+        d <- d[!is.na(counts)]
+        d <- d[,list(Ensembl.Gene.ID, counts)]
+        d <- as.data.frame(d)
+        
+        colnames(d) <- c("ensembl_gene_id", "klijn_pten")
+        d[,2] <- as.numeric(d[,2])
+        return(d)
+}
+
 import_other_mcf10a_vogt <- function(){
         # paper: Hart, J. R. et al. The butterfly effect in cancer:
         # A single base mutation can remodel the cell.
@@ -811,7 +837,7 @@ import_other_mcf10a_vogt <- function(){
 import_other_rwpe1 <- function(){
         affybatch <- read.celfiles(paste0("../pip3-rna-seq-input/other-cell-lines/E-GEOD-47047/", list.celfiles("../pip3-rna-seq-input/other-cell-lines/E-GEOD-47047/")))
         eset <- rma(affybatch)
-        eset.expr <- exprs(eset)
+        eset.expr <- exprs(affybatch)
         d <- as.data.frame(eset.expr)
         
         k <- keys(hugene10sttranscriptcluster.db, keytype = "PROBEID")
@@ -845,23 +871,25 @@ butterfly_paper_comparisons <- function() {
         c$ensembl_gene_id <- rownames(c)
         
         mcf10a.klijn.wt <- import_other_mcf10a_wt()
+        mcf10a.klijn.pten <- import_other_mcf10a_pten()
         mcf10a.vogt <- import_other_mcf10a_vogt()
-        rwpe1 <- import_other_rwpe1()
+        # rwpe1 <- import_other_rwpe1()
  
         t <- merge(mcf10a.vogt, c)
         t <- merge(mcf10a.klijn.wt, t)
-        t <- merge(rwpe1, t)
+        t <- merge(mcf10a.klijn.pten, t)
+        # t <- merge(rwpe1, t)
         
         # plot a correlation matrix from a count matrix
         # calculate pearson's correlation coefficients
-        cor.matrix <- cor(as.matrix(t[,c(2:20)]), method = "pearson")
+        cor.matrix <- cor(as.matrix(t[,c(2:18)]), method = "pearson")
         # plot correlation matrix in a file with 'name'
         pdf(file = "../pip3-rna-seq-output/figures/cor-butterfly.pdf", w = 6, h = 6)
         heatmap.2(cor.matrix, Rowv = FALSE, Colv = FALSE, dendrogram = "none",
                   col=bluered(99), breaks = 100, trace = "none", keysize = 1.5, margins = c(10, 10))
         dev.off()
         
-        t1 <- scale(t[,c(2:20)], center = T, scale = T)
+        t1 <- scale(t[,c(2:18)], center = T, scale = T)
         
         res <- prcomp(t1)
         pdf(file = "../pip3-rna-seq-output/figures/pca-variances-butterfly.pdf", w=4, h=3)
@@ -869,8 +897,8 @@ butterfly_paper_comparisons <- function() {
         dev.off()
         
         data <- as.data.frame(res$rotation[,1:3])
-        data$Condition <- c("WT", "WT", "WT", "WT", "H1047R", "H1047R", "H1047R", "WT", "WT", "WT", "H1047R", "H1047R", "H1047R", "PTEN-/-", "PTEN-/-", "PTEN-/-", "WT", "WT", "WT")
-        data$Paper <- c(rep("RWPE1", 3), "Klijn", rep("Vogt", 6), rep("Ours", 9))
+        data$Condition <- c("PTEN-/-", "WT", "H1047R", "H1047R", "H1047R", "WT", "WT", "WT", "H1047R", "H1047R", "H1047R", "PTEN-/-", "PTEN-/-", "PTEN-/-", "WT", "WT", "WT")
+        data$Paper <- c(rep("Klijn", 2), rep("Vogt", 6), rep("Ours", 9))
         p <- ggplot(data, aes(PC1,PC2, color = Condition)) +
                 geom_point(aes(shape = Paper, size = 2)) +
                 theme_bw()

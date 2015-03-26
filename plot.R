@@ -22,7 +22,7 @@ get_plot_data <- function(genes, norm) {
         colnames(res) <- c("id", "name")
         
         if(norm) {
-        plot.data <- readRDS("../pip3-rna-seq-output/rds/plot-time-courses-all-genes-norm-by-length.rds")
+        plot.data <- readRDS("../pip3-rna-seq-output/rds/plot-time-courses-all-genes-norm-by-length-exon-rpkm.rds")
         } else {
         plot.data <- readRDS("../pip3-rna-seq-output/rds/plot-time-courses-all-genes.rds")
         }
