@@ -1,3 +1,16 @@
 .Rproj.user
 .Rhistory
 .RData
+add-commit-push.sh
+butterfly-effect.pdf
+david.txt
+interesting-genes.txt
+kiselev-pip3-rna-seq-gene-profiles.zip
+len-phil-expected-effect.pdf
+len-phil-expected-effect_cache/*
+len-phil-expected-effect_files/*
+notes.txt
+pip3-rna-seq.Rproj
+sftp-config.json
+kiselev-pip3-rna-seq-gene-profiles/data/*
+kiselev-pip3-rna-seq-gene-profiles/rsconnect/*
