@@ -1,4 +1,3 @@
-
 linc_rna <- function(cond) {
 	gene.ann <- read.csv("../pip3-rna-seq-input/linc-rna/from-biomart-11-07-14.txt")
 	if(cond == "mut") {

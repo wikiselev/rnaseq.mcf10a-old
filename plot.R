@@ -141,48 +141,6 @@ plot_genes_by_motif <- function(mot.table, norm, s) {
   dev.off()
 }
 
-plot_mirna <- function(mirnas, s) {
-  # if genes are represented by ensembl ids
-  # if(grepl("ENSG000", genes[1])){
-  #   res <- ensembl_id_to_hgnc_symbol(genes)
-  # } else {
-  #   res <- hgnc_symbol_to_ensembl_id(genes)
-  # }
-  # colnames(res) <- c("id", "name")
-  
-  plot.data <- readRDS("../pip3-rna-seq-output/rds/plot-time-courses-all-mirna.rds")
-  plot.data <- plot.data[plot.data$id %in% mirnas, ]
-
-  limits <- aes(ymax = ymax, ymin = ymin)
-
-  p <- ggplot(plot.data,
-    aes(time, value, group = cond, color = cond)) +
-      geom_line() + facet_wrap(~ id, scale = "free_y") +
-      geom_errorbar(limits, width = 0.25)
-  pdf(file = paste0("../pip3-rna-seq-output/figures/mirna-", s, ".pdf"),
-    width = (sqrt(length(mirnas)) + 2)*3,
-    height = sqrt(length(mirnas))*3)
-  print(p)
-  dev.off()
-}
-
-plot_exons <- function(cond, genes) {
-  d <- readRDS(paste0("../pip3-rna-seq-output/rds/exon_diff_expr_wt_0_", cond, "_0.rds"))
-
-  # filter by genes
-  groups <- unique(d[,1])
-  groups <- groups[grepl(paste(genes, collapse = "|"), groups)]
-  d <- d[d[,1] %in% groups, ]
-
-  # filter by padj
-  groups <- unique(d[!is.na(d$padj) & d$padj < 0.01, 1])
-  d <- d[d[,1] %in% groups, ]
-
-  unlink(paste0("../rna-seq-media/DEXSeqReport_", cond), recursive = T)
-  DEXSeqHTML( d, path = paste0("../rna-seq-media/DEXSeqReport_", cond), FDR = 0.01,
-    color=c("#FF000080", "#0000FF80") )
-}
-
 plot_genes_by_constitutive_eff <- function(genes, s) {
   # query biomart
   if(grepl("ENSG000", genes[1, 1])){

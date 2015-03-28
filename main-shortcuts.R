@@ -251,84 +251,6 @@ create_venn_diagrams <- function() {
 			  T, "a66-egf-tc-vs-a66-no-egf")
 }
 
-mut_overview_custom <- function(genes){
-	# import averaged (by replicates) and normalized count matrix
-	cm <- readRDS("../pip3-rna-seq-output/rds/count-matrix-av.rds")
-	# select WT and both mutations at 0 time point
-	cm <- cm[,c(1,2,14,20)]
-	cm$gname <- ensembl_id_to_hgnc_symbol(cm$id)$hgnc_symbol
-	cm <- as.data.frame(cm)
-
-	cm$wt_0 <- log2(cm$wt_0 + 1)
-	cm$pten_0 <- log2(cm$pten_0 + 1)
-	cm$ki_0 <- log2(cm$ki_0 + 1)
-
-	p <- ggplot(cm, aes(wt_0, pten_0)) + 
-	  geom_point(colour="lightblue") +
-	  geom_point(data = cm[cm$gname %in% genes, ], aes(x=wt_0, y=pten_0), colour="red", size=4) +
-	  geom_text(data = cm[cm$gname %in% genes, ], aes(label = gname), hjust=-0.2, vjust=-0.7, size = 4) +
-	  geom_abline(intercept = 0, slope = 1, colour = "black", size = 1) +
-	  theme_bw()
-	pdf(file = "../pip3-rna-seq-output/figures/mut-0-overview-pten.pdf", w = 8, h = 8)
-	print(p)
-	dev.off()
-
-	p <- ggplot(cm, aes(wt_0, ki_0)) + 
-	  geom_point(colour="lightblue") +
-	  geom_point(data = cm[cm$gname %in% genes, ], aes(x=wt_0, y=ki_0), colour="red", size=4) +
-	  geom_text(data = cm[cm$gname %in% genes, ], aes(label = gname), hjust=-0.2, vjust=-0.7, size = 4) +
-	  geom_abline(intercept = 0, slope = 1, colour = "black", size = 1) +
-	  theme_bw()
-	pdf(file = "../pip3-rna-seq-output/figures/mut-0-overview-ki.pdf", w = 8, h = 8)
-	print(p)
-	dev.off()
-
-	p <- ggplot(cm, aes(pten_0, ki_0)) + 
-	  geom_point(colour="lightblue") +
-	  geom_point(data = cm[cm$gname %in% genes, ], aes(x=pten_0, y=ki_0), colour="red", size=4) +
-	  geom_text(data = cm[cm$gname %in% genes, ], aes(label = gname), hjust=-0.2, vjust=-0.7, size = 4) +
-	  geom_abline(intercept = 0, slope = 1, colour = "black", size = 1) +
-	  theme_bw()
-	pdf(file = "../pip3-rna-seq-output/figures/mut-0-overview-pten-ki.pdf", w = 8, h = 8)
-	print(p)
-	dev.off()
-}
-
-mut_overview_sig <- function(){
-	# import averaged (by replicates) and normalized count matrix
-	cm <- readRDS("../pip3-rna-seq-output/rds/count-matrix-av.rds")
-	# select WT and both mutations at 0 time point
-	cm <- cm[,c(1,2,14,20)]
-	# cm$gname <- ensembl_id_to_hgnc_symbol(cm$id)$hgnc_symbol
-	cm <- as.data.frame(cm)
-
-	cm$wt_0 <- log2(cm$wt_0 + 1)
-	cm$pten_0 <- log2(cm$pten_0 + 1)
-	cm$ki_0 <- log2(cm$ki_0 + 1)
-
-	p <- ggplot(cm, aes(wt_0, pten_0)) + 
-	  geom_point(colour="gray") +
-	  geom_point(data = cm[cm$id %in% pten, ], aes(x=wt_0, y=pten_0), colour="blue") +
-	  geom_abline(intercept = 0, slope = 1, colour = "black", size = 1) +
-	  theme_bw()
-	ggsave("../pip3-rna-seq-output/figures/mut-0-overview-pten.png", p, width=6, height=6)
-
-	p <- ggplot(cm, aes(wt_0, ki_0)) + 
-	  geom_point(colour="gray") +
-	  geom_point(data = cm[cm$id %in% ki, ], aes(x=wt_0, y=ki_0), colour="green") +
-	  geom_abline(intercept = 0, slope = 1, colour = "black", size = 1) +
-	  theme_bw()
-	ggsave("../pip3-rna-seq-output/figures/mut-0-overview-ki.png", p, width=6, height=6)
-
-	p <- ggplot(cm, aes(ki_0, pten_0)) + 
-	  geom_point(colour="gray") +
-	  geom_point(data = cm[cm$id %in% pi3k.pten, ], aes(x=ki_0, y=pten_0), colour="black") +
-	  # geom_point(data = cm[cm$id %in% ki, ], aes(x=ki_0, y=pten_0), colour="green", size = 1.5) +
-	  geom_abline(intercept = 0, slope = 1, colour = "black", size = 1) +
-	  theme_bw()
-	ggsave("../pip3-rna-seq-output/figures/mut-0-overview-pten-ki.png", p, width=6, height=6)
-}
-
 clust_mut <- function() {
 	clust_boot(set1, 2, 8, "main", 1)
 	clust_boot(set3, 2, 8, "main", 3)
@@ -471,12 +393,6 @@ motif_diff_wt <- function(clusts) {
 
 	d <<- motif_diff_activity_new(names(clusts[[1]][clusts[[1]] == 2]),
 		names(clusts[[3]][clusts[[3]] == 1]), "1-2", "3-1", "a66-1-2-3-1")
-}
-
-prdm1_genes_figure <- function() {
-	d <- d.const12[motif == "PRDM1.p3" & diff==1, list(target, score)]
-	d <- d[order(-score)]
-	plot_prmd1_genes(d[,target], T, "prdm1-genes-figure")
 }
 
 plot_go_clust_mut <- function() {
@@ -633,115 +549,6 @@ plot_go_clust_wt <- function() {
 	plot_go_terms(a66_6_2, "a66-6-2", 10)
 }
 
-
-quickgo_clust_mut <- function() {
-	quickgo1(main_1, "main-1", 20)
-	quickgo1(main_2, "main-2", 20)
-	quickgo1(main_3, "main-3", 20)
-	quickgo1(main_4, "main-4", 20)
-	quickgo1(main_5, "main-5", 20)
-	quickgo1(main_6, "main-6", 20)
-	quickgo1(main_7, "main-7", 20)
-	quickgo1(main_8, "main-8", 20)
-
-	quickgo1(main_1_1, "main-1-1", 20)
-	quickgo1(main_1_2, "main-1-2", 20)
-	quickgo1(main_1_3, "main-1-3", 20)
-	quickgo1(main_1_4, "main-1-4", 20)
-	quickgo1(main_1_5, "main-1-5", 20)
-
-	quickgo1(main_2_1, "main-2-1", 20)
-	quickgo1(main_2_2, "main-2-2", 20)
-	quickgo1(main_2_3, "main-2-3", 20)
-	quickgo1(main_2_4, "main-2-4", 20)
-
-	quickgo1(main_3_1, "main-3-1", 20)
-	quickgo1(main_3_2, "main-3-2", 20)
-	quickgo1(main_3_3, "main-3-3", 20)
-
-	quickgo1(main_4_1, "main-4-1", 20)
-	quickgo1(main_4_2, "main-4-2", 20)
-
-	quickgo1(main_5_1, "main-5-1", 20)
-	quickgo1(main_5_2, "main-5-2", 20)
-	quickgo1(main_5_3, "main-5-3", 20)
-	quickgo1(main_5_4, "main-5-4", 20)
-	quickgo1(main_5_5, "main-5-5", 20)
-
-	quickgo1(main_6_1, "main-6-1", 20)
-	quickgo1(main_6_2, "main-6-2", 20)
-
-	quickgo1(main_7_1, "main-7-1", 20)
-	quickgo1(main_7_2, "main-7-2", 20)
-	quickgo1(main_7_3, "main-7-3", 20)
-	quickgo1(main_7_4, "main-7-4", 20)
-
-	quickgo1(main_8_1, "main-8-1", 20)
-	quickgo1(main_8_2, "main-8-2", 20)
-	quickgo1(main_8_3, "main-8-3", 20)
-
-	quickgo2(main_1, main_2, "main-1-2", 10)
-
-	quickgo2(main_1_1, main_1_2, "main-1-1-1-2", 10)
-	quickgo2(main_1_3, main_1_2, "main-1-3-1-2", 8)
-	quickgo2(main_1_4, main_1_2, "main-1-4-1-2", 10)
-	quickgo2(main_1_5, main_1_2, "main-1-5-1-2", 10)
-
-	quickgo2(main_1_2, main_2_2, "main-1-2-2-2", 10)
-	quickgo2(main_2_1, main_2_2, "main-2-1-2-2", 8)
-	quickgo2(main_2_3, main_2_2, "main-2-3-2-2", 10)
-	quickgo2(main_2_4, main_2_2, "main-2-4-2-2", 10)
-
-	quickgo2(main_8_1, main_8_3, "main-8-1-8-3", 10)
-	quickgo2(main_4_1, main_4_2, "main-4-1-4-2", 10)
-}
-
-quickgo_clust_wt <- function() {
-	quickgo1(a66_1, "a66-1", 20)
-	quickgo1(a66_2, "a66-2", 20)
-	quickgo1(a66_3, "a66-3", 20)
-	quickgo1(a66_4, "a66-4", 20)
-	quickgo1(a66_5, "a66-5", 20)
-	quickgo1(a66_6, "a66-6", 20)
-
-	quickgo1(a66_1_1, "a66-1-1", 20)
-	quickgo1(a66_1_2, "a66-1-2", 20)
-	quickgo1(a66_2_1, "a66-2-1", 20)
-	quickgo1(a66_2_2, "a66-2-2", 20)
-	quickgo1(a66_2_3, "a66-2-3", 20)
-	quickgo1(a66_2_4, "a66-2-4", 20)
-	quickgo1(a66_3_1, "a66-3-1", 20)
-	quickgo1(a66_3_2, "a66-3-2", 20)
-	quickgo1(a66_3_3, "a66-3-3", 20)
-	quickgo1(a66_3_4, "a66-3-4", 20)
-	quickgo1(a66_4_1, "a66-4-1", 20)
-	quickgo1(a66_4_2, "a66-4-2", 20)
-	quickgo1(a66_5_1, "a66-5-1", 20)
-	quickgo1(a66_5_2, "a66-5-2", 20)
-	quickgo1(a66_6_1, "a66-6-1", 20)
-	quickgo1(a66_6_2, "a66-6-2", 20)
-
-	quickgo2(a66_1, a66_2, "a66-1-2", 20)
-
-	quickgo2(a66_1_1, a66_1_2, "a66-1-1-1-2", 20)
-	quickgo2(a66_2_1, a66_2_2, "a66-2-1-2-2", 10)
-
-	quickgo2(a66_3_1, a66_3_2, "a66-3-1-3-2", 10)
-
-	quickgo2(a66_5_1, a66_5_2, "a66-5-1-5-2", 10)
-
-
-	quickgo2(a66_1_1, a66_1_2, "a66-1-1-1-2", 10)
-	quickgo2(a66_1_3, a66_1_2, "a66-1-3-1-2", 8)
-	quickgo2(a66_1_4, a66_1_2, "a66-1-4-1-2", 10)
-	quickgo2(a66_1_5, a66_1_2, "a66-1-5-1-2", 10)
-
-	quickgo2(a66_1_2, a66_2_2, "a66-1-2-2-2", 10)
-	quickgo2(a66_2_1, a66_2_2, "a66-2-1-2-2", 8)
-	quickgo2(a66_2_3, a66_2_2, "a66-2-3-2-2", 10)
-	quickgo2(a66_2_4, a66_2_2, "a66-2-4-2-2", 10)
-}
-
 go_genes_for_vero <- function(name) {
 	d <- read.csv(paste0("../pip3-rna-seq-output/GO/", name, "/REVIGO.csv"))
 	# d <- d[d$eliminated == 0, ]
@@ -767,88 +574,58 @@ go_genes_for_vero <- function(name) {
 	write.csv(t3, file = paste0("../pip3-rna-seq-output/data-for-vero/GO/", name, ".csv"), row.names = F)
 }
 
-import_other_mcf10a_wt <- function(){
-        d <- read.csv("../pip3-rna-seq-input/other-cell-lines/140625_Klijn_count_noncoding.txt", sep = "\t", header = TRUE)
-        d <- as.data.table(d)
-        d <- d[,list(geneID, Sample.73)]
+heatmap_ismara_activities <- function() {
+        d <- t(read.table(file = "../pip3-rna-seq-input/ismara/activity_table.txt", header = T))
+        sig <- read.table(file = "../pip3-rna-seq-input/ismara/active_matrices.txt")
+        colnames(sig) <- c("variable", "zval")
+        sig.z <- sig[sig$zval > 2.0,]
+        d <- d[rownames(d) %in% sig.z[,1],]
+        sig.z <- sig.z[order(sig.z[,1]),]
         
-        d1 <- read.csv("../pip3-rna-seq-input/other-cell-lines/140625_Klijn_counts_coding.txt", sep = "\t", header = TRUE)
-        d1 <- as.data.table(d1)
-        d1 <- d1[,list(geneID, Sample.73)]
-        setnames(d1, colnames(d1), c("EntrezGene.ID", "counts"))
-        setkey(d1, "EntrezGene.ID")
+        t <- arrange_ismara_activity_matrix(d)
+        colnames(t) <- sapply(strsplit(colnames(t), "_"), function(x){paste(x[1], x[3], sep="_")})
         
-        # ann <- read.csv("../pip3-rna-seq-input/other-cell-lines/140625_Klijn_geneToTranscript.txt", sep = "\t", header = TRUE)
-        # ann <- as.data.table(ann)
-        # ann$gene_id <- as.numeric(unlist(sapply(strsplit(as.character(ann$gene_id), ":"), "[[", 2)))
+        t.av <- as.data.table(melt(t))
+        t.av <- t.av[,list(av = mean(value)), by = c("X1", "X2")]
+        t.av <- cast(t.av, X1 ~ X2)
+        rownames(t.av) <- t.av$X1
+        t.av <- t.av[,2:26]
+        cols <- colnames(t.av)
+        rows <- rownames(t.av)
+        t.av <- as.matrix(t.av)
+        colnames(t.av) <- cols
+        rownames(t.av) <- rows
+        t.av <- arrange_ismara_activity_matrix_av(t.av)
         
-        mart <- read.csv("../pip3-rna-seq-input/other-cell-lines/mart_export.txt", sep = "\t", header = TRUE)
-        mart <- mart[!is.na(mart$EntrezGene.ID),]
-        mart <- as.data.table(mart)
-        setkey(mart, "EntrezGene.ID")
+        # rownames(t) <- sapply(strsplit(rownames(t), "\\."), function(x){x[1]})
+        t <- t(scale(t(t), center = T, scale = T))
+        t.av <- t(scale(t(t.av), center = T, scale = T))
+        rownames(t.av) <- paste(sig.z[,1], sig.z[,2], sep = " - ")
         
-        d1 <- d1[mart]
-        d1 <- d1[!is.na(counts)]
-        d1 <- d1[,list(Ensembl.Gene.ID, counts)]
         
-        setnames(d, colnames(d), c("Ensembl.Gene.ID", "counts"))
-        d <- rbind(as.data.frame(d1), as.data.frame(d))
-        colnames(d) <- c("ensembl_gene_id", "klijn_wt")
-        d[,2] <- as.numeric(d[,2])
-        return(d)
-}
-
-import_other_mcf10a_pten <- function(){
-        d <- read.csv("../pip3-rna-seq-input/other-cell-lines/MCF10A_PTEN_expression.txt", sep = "\t", header = TRUE)
-        d <- as.data.table(d)
-        setnames(d, colnames(d), c("counts", "rpkm", "EntrezGene.ID"))
-        setkey(d, "EntrezGene.ID")
+        # set custom distance and clustering functions
+        hclustfunc <- function(x) hclust(x, method="complete")
+        distfunc <- function(x) dist(x,method="maximum")
         
-        mart <- read.csv("../pip3-rna-seq-input/other-cell-lines/mart_export.txt", sep = "\t", header = TRUE)
-        mart <- mart[!is.na(mart$EntrezGene.ID),]
-        mart <- as.data.table(mart)
-        setkey(mart, "EntrezGene.ID")
+        # obtain the clusters
+        fit <- hclustfunc(distfunc(t))
+        clusters <- cutree(fit, 4)
+        pdf(file = "../pip3-rna-seq-output/figures/ismara-activities-heatmap.pdf", w = 7, h = 6)
+        heatmap.2(t, Colv=F, trace = "none", scale='none', margins=c(5,21),
+                  hclust=hclustfunc, distfun=distfunc, col=bluered(256), symbreak=T,
+                  dendrogram = "row", lwid=c(0.3,0.05,1), lhei=c(0.3,1), lmat=rbind(c(5,0,4),c(3,1,2)),
+                  RowSideColors=as.character(clusters))
+        dev.off()
         
-        d <- d[mart]
-        d <- d[!is.na(counts)]
-        d <- d[,list(Ensembl.Gene.ID, counts)]
-        d <- as.data.frame(d)
-        
-        colnames(d) <- c("ensembl_gene_id", "klijn_pten")
-        d[,2] <- as.numeric(d[,2])
-        return(d)
-}
-
-import_other_mcf10a_vogt <- function(){
-        # paper: Hart, J. R. et al. The butterfly effect in cancer:
-        # A single base mutation can remodel the cell.
-        # Proc. Natl. Acad. Sci. U. S. A. 112, 1131–1136 (2015).
-        d <- read.csv("../pip3-rna-seq-input/other-cell-lines/GSE63452_mcf10a.vs.pik3ca.h1047r.csv", sep = ",")
-        d <- d[,1:7]
-        gene.names <- hgnc_symbol_to_ensembl_id(d$gene)
-        colnames(gene.names)[2] <- "gene"
-        d <- merge(d, gene.names)
-        d <- d[,2:8]
-        colnames(d) <- c("vogt_h1047r_1", "vogt_h1047r_2", "vogt_h1047r_3",
-                         "vogt_wt_1", "vogt_wt_2", "vogt_wt_3", "ensembl_gene_id")
-        return(d)
-}
-
-import_other_rwpe1 <- function(){
-        affybatch <- read.celfiles(paste0("../pip3-rna-seq-input/other-cell-lines/E-GEOD-47047/", list.celfiles("../pip3-rna-seq-input/other-cell-lines/E-GEOD-47047/")))
-        eset <- rma(affybatch)
-        eset.expr <- exprs(affybatch)
-        d <- as.data.frame(eset.expr)
-        
-        k <- keys(hugene10sttranscriptcluster.db, keytype = "PROBEID")
-        t <- select(hugene10sttranscriptcluster.db, keys=k, columns=c("ENSEMBL"),keytype="PROBEID")
-        t <- t[!is.na(t[,2]),]
-        
-        d$PROBEID <- rownames(d)
-        res <- merge(d, t)
-        res <- res[,c(5:8)]
-        colnames(res) <- c("RWPE1_1", "RWPE1_2", "RWPE1_3", "ensembl_gene_id")
-        return(res)
+        # obtain the clusters
+        fit <- hclustfunc(distfunc(t.av))
+        clusters <- cutree(fit, 4)
+        pdf(file = "../pip3-rna-seq-output/figures/ismara-activities-heatmap-av.pdf", w = 7, h = 6)
+        heatmap.2(t.av, Colv=F, trace = "none", scale='none', margins=c(5,21),
+                  hclust=hclustfunc, distfun=distfunc, col=bluered(256), symbreak=T,
+                  dendrogram = "row", lwid=c(0.3,0.05,1), lhei=c(0.3,1), lmat=rbind(c(5,0,4),c(3,1,2)),
+                  RowSideColors=as.character(clusters))
+        dev.off()
 }
 
 butterfly_paper_comparisons <- function() {

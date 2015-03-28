@@ -1,224 +1,151 @@
 process_averaged_tf_data <- function(file.name, sig.table) {
-  d <- read.table(file = file.name, header = T)
-  d$cond = rownames(d)
-  d <- as.data.table(d)
-  d[, time:=unlist(lapply(strsplit(d[,cond], "_"), "[[", 2))]
-  d[, cond:=unlist(lapply(strsplit(d[,cond], "_"), "[[", 1))]
-  d <- melt(d)
-  d$time <- as.numeric(d$time)
-  d$value <- as.numeric(d$value)
-  d$group <- paste(d$cond, d$variable, sep = "_")
-  d <- merge(d, sig.table, all = T)
-  d$zval <- as.numeric(d$zval)
-  d$variable <- factor(d$variable, levels = sig.table$variable)
-  return(d)
+        d <- read.table(file = file.name, header = T)
+        d$cond = rownames(d)
+        d <- as.data.table(d)
+        d[, time:=unlist(lapply(strsplit(d[,cond], "_"), "[[", 2))]
+        d[, cond:=unlist(lapply(strsplit(d[,cond], "_"), "[[", 1))]
+        d <- melt(d)
+        d$time <- as.numeric(d$time)
+        d$value <- as.numeric(d$value)
+        d$group <- paste(d$cond, d$variable, sep = "_")
+        d <- merge(d, sig.table, all = T)
+        d$zval <- as.numeric(d$zval)
+        d$variable <- factor(d$variable, levels = sig.table$variable)
+        return(d)
 }
 
 process_tf_data <- function(file.name, sig.table) {
-
-  v <- read.table(file = file.name, header = T)
-  x <- data.frame(index = 1:75, names = rownames(v))
-  x <- x[c(1,7,13,2,8,14,5,11,17,6,12,18,3,9,15,4,10,16,19,25,31,20,26,32,23,29,35,
-    24,30,36,21,27,33,22,28,34,37,38,39,40,46,52,41,47,53,44,50,56,45,51,57,42,48,54,43,
-    49,55,58,68,70,71,59,64,69,62,75,74,63,67,72,60,65,61,66,73),]
-  v <- v[x$index, ]
-  # v.split <- split(v, ceiling(seq_along(v[,1])/3))
-
-  d <- data.frame()
-  for(i in 1:length(v[1,])) {
-    v.split <- split(v[,i], ceiling(seq_along(v[,i])/3))
-    # this function is in svd.R
-    t <- make_eigen_table_to_plot(v.split, colnames(v)[i])
-    d <- rbind(d, t)
-  }
-
-  d <- merge(d, sig.table, all = T)
-
-  d$time <- as.numeric(d$time)
-  d$mean <- as.numeric(d$mean)
-  d$sd <- as.numeric(d$sd)
-  d$zval <- as.numeric(d$zval)
-  d$group <- paste(d$cond, d$ind, sep = "_")
-  d$ind <- factor(d$ind, levels = sig.table$ind)
-
-  return(d)
+        v <- read.table(file = file.name, header = T)
+        x <- data.frame(index = 1:75, names = rownames(v))
+        x <- x[c(1,7,13,2,8,14,5,11,17,6,12,18,3,9,15,4,10,16,19,25,31,20,26,32,23,29,35,
+        24,30,36,21,27,33,22,28,34,37,38,39,40,46,52,41,47,53,44,50,56,45,51,57,42,48,54,43,
+        49,55,58,68,70,71,59,64,69,62,75,74,63,67,72,60,65,61,66,73),]
+        v <- v[x$index, ]
+        # v.split <- split(v, ceiling(seq_along(v[,1])/3))
+        
+        d <- data.frame()
+        for(i in 1:length(v[1,])) {
+                v.split <- split(v[,i], ceiling(seq_along(v[,i])/3))
+                # this function is in svd.R
+                t <- make_eigen_table_to_plot(v.split, colnames(v)[i])
+                d <- rbind(d, t)
+        }
+        
+        d <- merge(d, sig.table, all = T)
+        
+        d$time <- as.numeric(d$time)
+        d$mean <- as.numeric(d$mean)
+        d$sd <- as.numeric(d$sd)
+        d$zval <- as.numeric(d$zval)
+        d$group <- paste(d$cond, d$ind, sep = "_")
+        d$ind <- factor(d$ind, levels = sig.table$ind)
+        
+        return(d)
 }
 
 plot_ismara_activities <- function() {
-  # import table with TF motifs' significance values
-  # note that I modified this file a bit before importing
-  # (to match TF motif names in the activity table)
-  sig <- read.table(file = "../pip3-rna-seq-input/ismara/active_matrices.txt")
-  colnames(sig) <- c("ind", "zval")
-
-  # import table with TF motifs' activities and standard deviations
-  data <- process_tf_data("../pip3-rna-seq-input/ismara/activity_table.txt", sig)
-
-  # calculate error bar values
-  data$ymax <- data$mean + data$sd
-  data$ymin <- data$mean - data$sd
-
-  limits <- aes(ymax = ymax, ymin = ymin)
-
-  # plot all TF motifs activities in one pdf file
-  p <- ggplot(data, aes(time, mean, color = cond, group = group)) +
-    geom_line() +
-    facet_wrap( ~ ind, ncol = 10) +
-    geom_errorbar(limits, width = 0.25)
-  plots = dlply(data , "ind", `%+%`, e1 = p)
-  ml = do.call(marrangeGrob, c(plots, list(nrow = 2, ncol = 1)))
-  ggsave("../pip3-rna-seq-output/figures/ismara-activity-table.pdf", ml)
+        # import table with TF motifs' significance values
+        # note that I modified this file a bit before importing
+        # (to match TF motif names in the activity table)
+        sig <- read.table(file = "../pip3-rna-seq-input/ismara/active_matrices.txt")
+        colnames(sig) <- c("ind", "zval")
+        
+        # import table with TF motifs' activities and standard deviations
+        data <- process_tf_data("../pip3-rna-seq-input/ismara/activity_table.txt", sig)
+        
+        # calculate error bar values
+        data$ymax <- data$mean + data$sd
+        data$ymin <- data$mean - data$sd
+        
+        limits <- aes(ymax = ymax, ymin = ymin)
+        
+        # plot all TF motifs activities in one pdf file
+        p <- ggplot(data, aes(time, mean, color = cond, group = group)) +
+                geom_line() +
+                facet_wrap( ~ ind, ncol = 10) +
+                geom_errorbar(limits, width = 0.25)
+        plots = dlply(data , "ind", `%+%`, e1 = p)
+        ml = do.call(marrangeGrob, c(plots, list(nrow = 2, ncol = 1)))
+        ggsave("../pip3-rna-seq-output/figures/ismara-activity-table.pdf", ml)
 }
 
 plot_ismara_averaged_activities <- function() {
-  # import table with TF motifs' significance values
-  # note that I modified this file a bit before importing
-  # (to match TF motif names in the activity table)
-  sig <- read.table(file = "../pip3-rna-seq-input/ismara/active_matrices_averaged.txt")
-  colnames(sig) <- c("variable", "zval")
-
-  # import table with TF motifs' activities and standard deviations
-  data <- process_averaged_tf_data("../pip3-rna-seq-input/ismara/activity_table_averaged.txt", sig)
-  err <- process_averaged_tf_data("../pip3-rna-seq-input/ismara/delta_table_averaged.txt", sig)
-
-  # calculate error bar values
-  data$ymax <- data$value + err$value
-  data$ymin <- data$value - err$value
-
-  limits <- aes(ymax = ymax, ymin = ymin)
-
-  # plot all TF motifs activities in one pdf file
-  p <- ggplot(data, aes(time, value, color = cond, group = group)) +
-    geom_line() +
-    facet_wrap( ~ variable, ncol = 10) +
-    geom_errorbar(limits, width = 0.25)
-  plots = dlply(data , "variable", `%+%`, e1 = p)
-  ml = do.call(marrangeGrob, c(plots, list(nrow = 2, ncol = 1)))
-  ggsave("../pip3-rna-seq-output/figures/ismara-activity-table-averaged.pdf", ml)
-}
-
-get_ismara_target_info_from_file <- function(file) {
-  # read the targets file line by line and store them in mylist
-  fc <- file(paste0("../pip3-rna-seq-input/ismara_targets/", file))
-  mylist <- strsplit(readLines(fc), "\t")
-  close(fc)
-
-  # from mylist remove locations with no targets
-  mylist <- mylist[unlist(lapply(mylist, length)) > 3]
-
-  # extract information from mylist
-  loc <- unlist(lapply(mylist, "[", 1))
-  score <- unlist(lapply(mylist, "[", 2))
-  motif <- unlist(lapply(mylist, "[", 3))
-  len <- unlist(lapply(mylist, function(x) length(4:length(x))))
-  targets <- unlist(lapply(mylist, function(x) x[4:length(x)]))
-  target <- unlist(lapply(strsplit(targets, "\\|"), "[", 2))
-
-  # put all information in one table
-  mytable <- unique(data.table(location = rep(loc, len),
-    score = rep(score, len), motif = rep(motif, len),
-    target = target))
-  return(mytable)
+        # import table with TF motifs' significance values
+        # note that I modified this file a bit before importing
+        # (to match TF motif names in the activity table)
+        sig <- read.table(file = "../pip3-rna-seq-input/ismara/active_matrices_averaged.txt")
+        colnames(sig) <- c("variable", "zval")
+        
+        # import table with TF motifs' activities and standard deviations
+        data <- process_averaged_tf_data("../pip3-rna-seq-input/ismara/activity_table_averaged.txt", sig)
+        err <- process_averaged_tf_data("../pip3-rna-seq-input/ismara/delta_table_averaged.txt", sig)
+        
+        # calculate error bar values
+        data$ymax <- data$value + err$value
+        data$ymin <- data$value - err$value
+        
+        limits <- aes(ymax = ymax, ymin = ymin)
+        
+        # plot all TF motifs activities in one pdf file
+        p <- ggplot(data, aes(time, value, color = cond, group = group)) +
+        geom_line() +
+        facet_wrap( ~ variable, ncol = 10) +
+        geom_errorbar(limits, width = 0.25)
+        plots = dlply(data , "variable", `%+%`, e1 = p)
+        ml = do.call(marrangeGrob, c(plots, list(nrow = 2, ncol = 1)))
+        ggsave("../pip3-rna-seq-output/figures/ismara-activity-table-averaged.pdf", ml)
 }
 
 get_ismara_target_info_from_file_new <- function(file) {
-  # read the targets file line by line and store them in mylist
-  fc <- file(paste0("../pip3-rna-seq-input/ismara_targets/", file))
-  mylist <- strsplit(readLines(fc), "\t")
-  close(fc)
-
-  # from mylist remove locations with no targets
-  mylist <- mylist[unlist(lapply(mylist, length)) > 3]
-
-  # extract information from mylist
-  loc <- unlist(lapply(mylist, "[", 1))
-  score <- unlist(lapply(mylist, "[", 2))
-  motif <- unlist(lapply(mylist, "[", 3))
-  len <- unlist(lapply(mylist, function(x) length(4:length(x))))
-  targets <- unlist(lapply(mylist, function(x) x[4:length(x)]))
-  target <- unlist(lapply(strsplit(targets, "\\|"), "[", 2))
-
-  # record the source reference
-  ref <- unlist(lapply(strsplit(targets, "\\|"), "[", 1))
-
-  # put all information in one table
-  mytable <- unique(data.table(location = rep(loc, len),
-    score = rep(score, len), motif = rep(motif, len),
-    target = target, ref = ref))
-
-  # remove all GenBank entries, leave only RefSeq entries and collaps entries
-  # with the same location,score,motif,target sets
-  mytable <- unique(mytable[grepl("NM_", ref), list(location, score, motif, target)])
-  return(mytable)
-}
-
-
-plot_motifs_tfs <- function(motif) {
-  # read the targets file line by line and store them in mylist
-  fc <- file(paste0("../pip3-rna-seq-input/ismara/motifs_tfs.txt"))
-  mylist <- strsplit(readLines(fc), "\t")
-  close(fc)
-
-  entry <- mylist[[grep(motif, mylist)]]
-  tfs <- entry[2:length(entry)]
-  plot_genes(tfs, F, paste0("tfs-of-", motif))
-}
-
-
-merge_ismara_target_files <- function() {
-  files <- list.files("../pip3-rna-seq-input/ismara_targets/")
-
-  data <- data.table()
-  for(i in files) {
-    dt <- get_ismara_target_info_from_file(i)
-    data <- rbindlist(list(data, dt))
-  }
-
-  data[, score:=as.numeric(data[,score])]
-
-  # data <- data[, list(score = max(score)), by = c("target", "motif")]
-
-  sig <- read.table(file = "../pip3-rna-seq-input/ismara/active_matrices.txt")
-  colnames(sig) <- c("motif", "zval")
-
-  data <- as.data.table(merge(as.data.frame(data), sig))
-
-  saveRDS(data, "../pip3-rna-seq-output/rds/ismara-targets.rds")
+        # read the targets file line by line and store them in mylist
+        fc <- file(paste0("../pip3-rna-seq-input/ismara_targets/", file))
+        mylist <- strsplit(readLines(fc), "\t")
+        close(fc)
+        
+        # from mylist remove locations with no targets
+        mylist <- mylist[unlist(lapply(mylist, length)) > 3]
+        
+        # extract information from mylist
+        loc <- unlist(lapply(mylist, "[", 1))
+        score <- unlist(lapply(mylist, "[", 2))
+        motif <- unlist(lapply(mylist, "[", 3))
+        len <- unlist(lapply(mylist, function(x) length(4:length(x))))
+        targets <- unlist(lapply(mylist, function(x) x[4:length(x)]))
+        target <- unlist(lapply(strsplit(targets, "\\|"), "[", 2))
+        
+        # record the source reference
+        ref <- unlist(lapply(strsplit(targets, "\\|"), "[", 1))
+        
+        # put all information in one table
+        mytable <- unique(data.table(location = rep(loc, len),
+                score = rep(score, len), motif = rep(motif, len),
+        target = target, ref = ref))
+        
+        # remove all GenBank entries, leave only RefSeq entries and collaps entries
+        # with the same location,score,motif,target sets
+        mytable <- unique(mytable[grepl("NM_", ref), list(location, score, motif, target)])
+        return(mytable)
 }
 
 merge_ismara_target_files_new <- function() {
-  files <- list.files("../pip3-rna-seq-input/ismara_targets/")
-
-  data <- data.table()
-  for(i in files) {
-    dt <- get_ismara_target_info_from_file_new(i)
-    data <- rbindlist(list(data, dt))
-  }
-
-  data[, score:=as.numeric(data[,score])]
-
-  data <- data[, list(score = max(score)), by = c("target", "motif")]
-
-  sig <- read.table(file = "../pip3-rna-seq-input/ismara/active_matrices.txt")
-  colnames(sig) <- c("motif", "zval")
-
-  data <- as.data.table(merge(as.data.frame(data), sig))
-
-  saveRDS(data, "../pip3-rna-seq-output/rds/ismara-targets-new.rds")
-}
-
-get_ismara_targets <- function(motifs) {
-  d <- readRDS("../pip3-rna-seq-output/rds/ismara-targets.rds")
-  d <- d[motif %in% motifs]
-  target_ens <- hgnc_symbol_to_ensembl_id(d[,target])
-  colnames(target_ens) <- c("target_ens", "target")
-  target_ens <- as.data.table(target_ens)
-  setkey(d, "target")
-  setkey(target_ens, "target")
-  # note that length res is < length d, because some gene names do not correspond
-  # to hgnc names in my annotation table
-  res <- d[target_ens]
-  return(res)
+        files <- list.files("../pip3-rna-seq-input/ismara_targets/")
+        
+        data <- data.table()
+        for(i in files) {
+                dt <- get_ismara_target_info_from_file_new(i)
+                data <- rbindlist(list(data, dt))
+        }
+        
+        data[, score:=as.numeric(data[,score])]
+        
+        data <- data[, list(score = max(score)), by = c("target", "motif")]
+        
+        sig <- read.table(file = "../pip3-rna-seq-input/ismara/active_matrices.txt")
+        colnames(sig) <- c("motif", "zval")
+        
+        data <- as.data.table(merge(as.data.frame(data), sig))
+        
+        saveRDS(data, "../pip3-rna-seq-output/rds/ismara-targets-new.rds")
 }
 
 get_ismara_motifs <- function(gene.set) {
@@ -566,3 +493,18 @@ plot_motif_target_hist <- function(targets, z, s) {
     coord_flip()
   return(list(data = d, plot = p))
 }
+
+arrange_ismara_activity_matrix <- function(count.matrix){
+        x <- c(37,38,39,
+               58,68,70,59,64,71,62,69,75,63,67,74,60,65,72,61,66,73,
+               19,25,31,20,26,32,23,29,35,24,30,36,21,27,33,22,28,34,
+               1,7,13,2,8,14,5,11,17,6,12,18,3,9,15,4,10,16,
+               40,46,52,41,47,53,44,50,56,45,51,57,42,48,54,43,49,55)
+        return(count.matrix[,x])
+}
+
+arrange_ismara_activity_matrix_av <- function(count.matrix){
+        x <- c(13,20,21,24,25,22,23,7,8,11,12,9,10,1,2,5,6,3,4,14,15,18,19,16,17)
+        return(count.matrix[,x])
+}
+
