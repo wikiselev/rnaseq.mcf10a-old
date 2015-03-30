@@ -208,3 +208,142 @@ get_ismara_targets <- function(motifs) {
         res <- d[target_ens]
         return(res)
 }
+
+split_targets_by_motifs <- function(targets, zv, s) {
+        d <- get_ismara_motifs(targets)
+        d <- d[score > s & zval > zv]
+        motifs <- unique(d[, motif])
+        for(m in motifs) {
+                plot_motif_targets(d, m)
+        }
+}
+
+plot_motif_targets <- function(target.table, m) {
+        target.table <- sum_motif_target_scores_by_location(target.table)
+        target.table <- target.table[motif == m, list(target, score)]
+        # query biomart
+        mart <- readRDS("../pip3-rna-seq-output/rds/count-matrix-ann.RDS")
+        mart <- unique(mart[ , 1:2])
+        colnames(mart)[2] <- "target"
+        
+        res <- merge(target.table, mart, by = "target")
+        setnames(res, c("target", "score", "ensembl_gene_id"),
+                 c("name", "score", "id"))
+        
+        plot.data <- readRDS("../pip3-rna-seq-output/rds/plot-time-courses-all-genes.rds")
+        plot.data <- merge(plot.data, res)
+        
+        plot.data$name <- factor(plot.data$name, 
+                                 levels=unique(plot.data[with(plot.data, order(score)), ]$name))
+        
+        ann.data <- plot.data[, c(3:4, 8:9)]
+        # ann.data$cond <- "wt"
+        ann.data$time <- 200
+        ann.data$value <- Inf
+        ann.data <- unique(ann.data)
+        ann.data$score <- format(ann.data$score, digits = 2, nsmall = 2)
+        # ann.data$score <- as.numeric(ann.data$score)
+        
+        
+        limits <- aes(ymax = ymax, ymin = ymin)
+        
+        p <- ggplot(plot.data, aes(time, value, group = cond, colour = cond)) +
+                geom_line() +
+                facet_wrap(~name, scale = "free_y") +
+                geom_errorbar(limits, width = 0.25) +
+                geom_text(aes(x = time, y = value, label = score),
+                          data = ann.data, vjust = 1.2, colour = "black")
+        pdf(file = paste0("../pip3-rna-seq-output/figures/ismara-", m, "-targets.pdf"),
+            width = (sqrt(length(res$name)) + 2)*3,
+            height = sqrt(length(res$name))*3)
+        print(p)
+        dev.off()
+}
+
+plot_motif_diff_targets <- function(target.table, m) {
+        target.table <- target.table[motif == m, list(diff, target, score)]
+        # query biomart
+        mart <- readRDS("../pip3-rna-seq-output/rds/count-matrix-ann.RDS")
+        mart <- unique(mart[ , 1:2])
+        colnames(mart)[2] <- "target"
+        
+        res <- merge(target.table, mart, by = "target")
+        setnames(res, c("target", "diff", "score", "ensembl_gene_id"),
+                 c("name", "diff", "score", "id"))
+        
+        plot.data <- readRDS("../pip3-rna-seq-output/rds/plot-time-courses-all-genes.rds")
+        plot.data <- merge(plot.data, res)
+        
+        plot.data$name <- factor(plot.data$name, 
+                                 levels=unique(plot.data[with(plot.data, order(score)), ]$name))
+        
+        ann.data <- plot.data[, c(3:4, 8:10)]
+        # ann.data$cond <- "wt"
+        ann.data$time <- 200
+        ann.data$value <- Inf
+        ann.data <- unique(ann.data)
+        ann.data$score <- format(ann.data$score, digits = 2, nsmall = 2)
+        # ann.data$score <- as.numeric(ann.data$score)
+        
+        
+        limits <- aes(ymax = ymax, ymin = ymin)
+        
+        p <- ggplot(plot.data,
+                    aes(time, value, group = cond, colour = cond)) +
+                geom_line() + facet_wrap(name ~ diff, scale = "free_y") +
+                geom_errorbar(limits, width = 0.25) +
+                geom_text(aes(x = time, y = value, label = score),
+                          data = ann.data, vjust = 1.2, colour = "black")
+        pdf(file = paste0("../pip3-rna-seq-output/figures/ismara-", m, "-targets.pdf"),
+            width = (sqrt(length(res$name)) + 2)*3,
+            height = sqrt(length(res$name))*3)
+        print(p)
+        dev.off()
+}
+
+plot_motif_target_hist <- function(targets, z, s) {
+        d <- get_ismara_motifs(targets)
+        d <- sum_motif_target_scores_by_location(d)
+        d <- d[score > s & zval > z]
+        t <- d[, list(target.num = length(target)), by = c("motif", "zval")]
+        t <- t[order(zval)]
+        # t <- t[zval > 2]
+        # t <- t[order(zval)]
+        t$motif <- factor(t$motif, levels = t$motif)
+        p <- ggplot(t, aes(motif, target.num, fill = zval)) +
+                geom_bar(stat = "identity") +
+                coord_flip()
+        return(list(data = d, plot = p))
+}
+
+combine_gene_sets_motif_targets <- function(list, s, name) {
+        i <- 1
+        mod.list <- lapply(list, function(x) {
+                tmp <- get_ismara_motifs_new(x)
+                tmp <- tmp[zval > 2 & score > s, list(motif, target, score)]
+                tmp$set <- i
+                tmp$x <- "1"
+                i <<- i + 1
+                setkey(tmp, "motif")
+        })
+        mod.list <- do.call("rbind", mod.list)
+        mot.num <- length(unique(mod.list[,motif]))
+        cols <- rainbow(mot.num, s=.6, v=.9)[sample(1:mot.num,mot.num)]
+        p <- ggplot(mod.list, aes(x, x, color = motif)) +
+                geom_jitter(aes(size = score), position = position_jitter(width = .2, height = 0)) +
+                scale_size(range = c(2, 5)) +
+                scale_colour_manual(values=cols) +
+                # coord_flip() +
+                facet_grid(target ~ set) +
+                theme(strip.text.y = element_text(size = 7, angle = 0),
+                      panel.background = element_rect(fill = 'white', colour = 'gray'),
+                      axis.text.x=element_blank(),
+                      axis.text.y=element_blank(),
+                      axis.ticks=element_blank(),
+                      axis.title.x=element_blank(),
+                      axis.title.y=element_blank())
+        pdf(file = paste0("../pip3-rna-seq-output/figures/motif-set-heatmap-", name, ".pdf"), w = 10, h = 15)
+        print(p)
+        dev.off()
+        return(mod.list)
+}
