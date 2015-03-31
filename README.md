@@ -8,9 +8,8 @@ The paper is in preparation at the moment. Draft is available [here](https://dri
 
 Scripts that were performed for processing of the raw data can be found in `raw-processing` folder.
 
-Gene profiles can be interactively plotted [here](http://www.bioinformatics.babraham.ac.uk/shiny/kiselev-pip3-rna-seq-gene-profiles/).
-
-(source files of this Shiny app can be found in `kiselev-pip3-rna-seq-gene-profiles` folder)
+Gene profiles can be interactively plotted [here](http://www.bioinformatics.babraham.ac.uk/shiny/kiselev-pip3-rna-seq-gene-profiles/)
+(source files of this [Shiny app](http://shiny.rstudio.com/) can be found in `kiselev-pip3-rna-seq-gene-profiles` folder).
 
 ISMARA report can be viewed [here](http://lenoverelab.org/data/2015/kiselev/ismara_report_hg19/).
 
