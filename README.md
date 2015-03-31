@@ -1,6 +1,6 @@
 ## RNA-Seq PIP3 signaling project
 
-This is a collection of scripts that I used to analyze RNA-Seq time course data from MF10a human breast cell lines upon EGF stimulation (postdoctoral project at the Babraham Institute, Cambridge, UK).
+This is a collection of scripts that I used to analyze RNA-Seq time course data from MCF10A human breast cell lines upon EGF stimulation (postdoctoral project at the Babraham Institute, Cambridge, UK).
 
 ### External sources
 
