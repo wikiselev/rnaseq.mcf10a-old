@@ -1,38 +1,44 @@
-RNA-Seq PIP3 signaling project
-=============
+## RNA-Seq PIP3 signaling project
+
+### External sources
 
 This is a collection of scripts that I used to analyze RNA-Seq time course data from MF10a human breast cell lines upon EGF stimulation (postdoctoral project at the Babraham Institute, Cambridge, UK).
 
 The paper is in preparation at the moment. Draft is available [here](https://drive.google.com/folderview?id=0B9AEJU3ZybXIYkJ1T3JubFlOSWc&usp=sharing) (accessible only by collaborators).
 
+Scripts that were performed for processing of the raw data can be found in `raw-processing` folder.
+
 Gene profiles can be interactively plotted [here](http://www.bioinformatics.babraham.ac.uk/shiny/kiselev-pip3-rna-seq-gene-profiles/).
 
-Raw ISMARA report can be viewed [here](http://lenoverelab.org/data/2015/kiselev/ismara_report_hg19/).
+(source files of this Shiny app can be found in `kiselev-pip3-rna-seq-gene-profiles` folder)
 
-Averaged ISMARA report can be viewed [here](http://lenoverelab.org/data/2015/kiselev/averaged_report_hg19/).
+ISMARA report can be viewed [here](http://lenoverelab.org/data/2015/kiselev/ismara_report_hg19/).
 
-The main script is `main.R` which follows the paper chapters and where all the analysis steps are described. This file sources `functions.R` file which loads all required libraries and several function files (split by functionality):
+### main.R
 
-main.R
+To reproduce paper results one needs to run `main.R` which follows the paper chapters and where all the analysis steps are described. This file sources `functions.R` file which loads all required libraries and several function files (split by functionality):
 
-* functions.R
+* main-shortcuts.R
+* read-process.R
+* diff-expr.R
+* ismara.R
+* clustering.R
+* plot.R
+* go.R
+* import-other-data.R
+* alt-splicing.R
+* linc-rna.R
+* mirna.R
 
-  * read-process.R
+### extra-main.R
 
-  * diff-expr.R
+Some extra analysis, not included in the paper, can be performed by running `extra-main.R` which calls the following function files (split by functionality):
 
-  * const-mut.R
+* alt-splicing.R
+* splicing-on-cluster.R
+* linc-rna.R
+* mirna.R
 
-  * time-courses.R
+### Data files
 
-  * ismara.R
-
-  * sql.R
-
-  * plot.R
-
-  * svd.R
-
-  * anova.R
-
-  * go.R
+Data files will become available once the paper is published.
