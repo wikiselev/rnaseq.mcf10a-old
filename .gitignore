@@ -13,3 +13,11 @@ pip3-rna-seq.Rproj
 sftp-config.json
 kiselev-pip3-rna-seq-gene-profiles/data/*
 kiselev-pip3-rna-seq-gene-profiles/rsconnect/*
+anova.R
+pdf-to-png.R
+sql.R
+svd.R
+raw-processing/*
+time-courses.R
+unused-functions.R
+unused-main.R
