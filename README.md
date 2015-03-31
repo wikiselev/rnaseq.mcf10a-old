@@ -1,17 +1,17 @@
 ## RNA-Seq PIP3 signaling project
 
-### External sources
-
 This is a collection of scripts that I used to analyze RNA-Seq time course data from MF10a human breast cell lines upon EGF stimulation (postdoctoral project at the Babraham Institute, Cambridge, UK).
 
-The paper is in preparation at the moment. Draft is available [here](https://drive.google.com/folderview?id=0B9AEJU3ZybXIYkJ1T3JubFlOSWc&usp=sharing) (accessible only by collaborators).
+### External sources
 
-Scripts that were performed for processing of the raw data can be found in `raw-processing` folder.
+1. [Draft of the manuscript](https://drive.google.com/folderview?id=0B9AEJU3ZybXIYkJ1T3JubFlOSWc&usp=sharing) (accessible only by collaborators).
 
-Gene profiles can be interactively plotted [here](http://www.bioinformatics.babraham.ac.uk/shiny/kiselev-pip3-rna-seq-gene-profiles/)
+2. Scripts for processing of the raw data can be found in `raw-processing` folder.
+
+3. [Interactive RNA-Seq gene profiles](http://www.bioinformatics.babraham.ac.uk/shiny/kiselev-pip3-rna-seq-gene-profiles/)
 (source files of this [Shiny app](http://shiny.rstudio.com/) can be found in `kiselev-pip3-rna-seq-gene-profiles` folder).
 
-ISMARA report can be viewed [here](http://lenoverelab.org/data/2015/kiselev/ismara_report_hg19/).
+4. [ISMARA](http://ismara.unibas.ch/fcgi/mara) report can be viewed [here](http://lenoverelab.org/data/2015/kiselev/ismara_report_hg19/).
 
 ### main.R
 
