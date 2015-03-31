@@ -21,3 +21,6 @@ raw-processing/*
 time-courses.R
 unused-functions.R
 unused-main.R
+convert-pdf-to-png.sh
+butterfly-effect.Rmd
+len-phil-expected-effect.Rmd
