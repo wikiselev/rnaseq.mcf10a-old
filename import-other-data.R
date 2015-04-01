@@ -50,6 +50,27 @@ import_other_mcf10a_pten <- function(){
         return(d)
 }
 
+import_other_mcf10a_pten_wt <- function(){
+        d <- read.csv("../pip3-rna-seq-input/other-cell-lines/MCF10A_WT_expression.txt", sep = "\t", header = TRUE)
+        d <- as.data.table(d)
+        setnames(d, colnames(d), c("counts", "rpkm", "EntrezGene.ID"))
+        setkey(d, "EntrezGene.ID")
+        
+        mart <- read.csv("../pip3-rna-seq-input/other-cell-lines/mart_export.txt", sep = "\t", header = TRUE)
+        mart <- mart[!is.na(mart$EntrezGene.ID),]
+        mart <- as.data.table(mart)
+        setkey(mart, "EntrezGene.ID")
+        
+        d <- d[mart]
+        d <- d[!is.na(counts)]
+        d <- d[,list(Ensembl.Gene.ID, counts)]
+        d <- as.data.frame(d)
+        
+        colnames(d) <- c("ensembl_gene_id", "klijn_wt")
+        d[,2] <- as.numeric(d[,2])
+        return(d)
+}
+
 import_other_mcf10a_vogt <- function(){
         # paper: Hart, J. R. et al. The butterfly effect in cancer:
         # A single base mutation can remodel the cell.

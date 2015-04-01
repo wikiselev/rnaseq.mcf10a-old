@@ -647,7 +647,7 @@ butterfly_paper_comparisons <- function() {
         c <- as.data.frame(c)
         c$ensembl_gene_id <- rownames(c)
         
-        mcf10a.klijn.wt <- import_other_mcf10a_wt()
+        mcf10a.klijn.wt <- import_other_mcf10a_pten_wt()
         mcf10a.klijn.pten <- import_other_mcf10a_pten()
         mcf10a.vogt <- import_other_mcf10a_vogt()
         # rwpe1 <- import_other_rwpe1()
