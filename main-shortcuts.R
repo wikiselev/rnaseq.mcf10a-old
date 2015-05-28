@@ -723,6 +723,14 @@ prepare_data_for_len_phil_effect <- function(){
         plot_genes(names(clusts[[1]][clusts[[1]] == 1]), F, "len-phil-effect-1")
         plot_genes(names(clusts[[1]][clusts[[1]] == 2]), F, "len-phil-effect-2")
         
+        # save gene ids and names into the file:
+        write.table(ensembl_id_to_hgnc_symbol(names(clusts[[1]][clusts[[1]] == 1])),
+                    file = "../pip3-rna-seq-output/rds/expected-effect-up.txt",
+                    sep = "\t", col.names = F, row.names = F, quote = F)
+        write.table(ensembl_id_to_hgnc_symbol(names(clusts[[1]][clusts[[1]] == 2])),
+                    file = "../pip3-rna-seq-output/rds/expected-effect-down.txt",
+                    sep = "\t", col.names = F, row.names = F, quote = F)
+        
         len_phil_effect1 <- annotate_go_terms("len-phil-effect1-1")
         len_phil_effect2 <- annotate_go_terms("len-phil-effect1-2")
         len_phil_effect <- annotate_go_terms("len-phil-effect")
