@@ -109,10 +109,13 @@ process_raw_read_counts <- function() {
         }
         sink()
         
-#         map.lengths <- map.lengths[map.lengths$ensembl_gene_id %in% rownames(count.matrix),]
-#         map.lengths <- map.lengths[order(map.lengths$ensembl_gene_id),]
-# 
-#         ave_repl(count.matrix[rownames(count.matrix) %in% map.lengths$ensembl_gene_id,] / map.lengths$exon_map_length * 1e9 / mean(colSums(count.matrix)), "-norm-by-length-exon-rpkm")
+        map.lengths <- read.table("../pip3-rna-seq-input/annotations/exon-map-lengths.csv", header = T, sep = ",")
+        
+        map.lengths <- map.lengths[map.lengths$ensembl_gene_id %in% rownames(count.matrix),]
+        map.lengths <- map.lengths[order(map.lengths$ensembl_gene_id),]
+        
+        # mean(colSums(count.matrix)) == 21890091 - this values is also used in shiny app
+        ave_repl(count.matrix / map.lengths$exon_map_length * 1e9 / mean(colSums(count.matrix)), "-norm-by-length-exon-rpkm")
 }
 
 initialize_sets <- function() {
