@@ -79,15 +79,11 @@ plot_prdm1_genes <- function(genes, norm, s) {
             strip.background = element_blank())
         # theme_tufte()
         if(norm) {
-        file.name <- paste0("../pip3-rna-seq-output/figures/genes-norm-", s, ".pdf")
+        file.name <- paste0("../pip3-rna-seq-output/figures/genes-norm-", s, ".png")
         } else {
-        file.name <- paste0("../pip3-rna-seq-output/figures/genes-", s, ".pdf")
+        file.name <- paste0("../pip3-rna-seq-output/figures/genes-", s, ".png")
         }
-        pdf(file = file.name,
-        width = 2,
-        height = 10)
-        print(p)
-        dev.off()
+        ggsave(file.name, w = 2, h = 10, bg = "transparent")
 }
 
 # plot_prdm1_genes_multiple <- function(genes, norm, s) {
