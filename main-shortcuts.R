@@ -96,37 +96,23 @@ process_raw_read_counts <- function() {
 
         # alternative normalisation - by the total length of all exons in a given gene
         # warning - takes quite a lot of time to calculate the map.lengths!!!
-        d <- read.table("../pip3-rna-seq-input/annotations/genes.gtf", sep = '\t', header = F)
-        exons <- d[which( d[,3] == 'exon' ),]
 
-        gene.ids <- exons[,9]
-        gene.ids <- unlist(sapply(strsplit(as.character(gene.ids), "; "), "[[", 4))
-        gene.ids <- unlist(sapply(strsplit(as.character(gene.ids), " "), "[[", 2))
+        d <- import("../pip3-rna-seq-input/annotations/genes.gtf")
         
-        map.regions = GRanges(
-                seqnames=exons[,1],
-                ranges=IRanges(exons[,4],
-                               exons[,5]),
-                strand=exons[,7],
-                ensembl_gene_id=gene.ids
-        )
-        
-        map.regions <- unique(map.regions)
-        
-        map.lengths <- NULL
-        for(g in unique(map.regions$ensembl_gene_id)) {
-                r <- reduce(map.regions[map.regions$ensembl_gene_id == g, ])
+        sink("../pip3-rna-seq-input/annotations/exon-map-lengths.csv")
+        cat(paste("ensembl_gene_id", "exon_map_length", sep = ","))
+        for(g in unique(d$gene_id)) {
+                r <- reduce(d[d$gene_id == g  & d$type == "exon"])
                 len <- sum(end(r) - start(r))
-                map.lengths <- rbind(map.lengths, data.frame(g, len))
+                cat(paste(g, len, sep = ","))
+                cat('\n')
         }
+        sink()
         
-        colnames(map.lengths) <- c("ensembl_gene_id", "exon_map_length")
-        write.csv(map.lengths, "../pip3-rna-seq-input/annotations/exon-map-lengths.csv", quote = F, row.names = F)
-
-        map.lengths <- map.lengths[map.lengths$ensembl_gene_id %in% rownames(count.matrix),]
-        map.lengths <- map.lengths[order(map.lengths$ensembl_gene_id),]
-
-        ave_repl(count.matrix[rownames(count.matrix) %in% map.lengths$ensembl_gene_id,] / map.lengths$exon_map_length * 1e9 / mean(colSums(count.matrix)), "-norm-by-length-exon-rpkm")
+#         map.lengths <- map.lengths[map.lengths$ensembl_gene_id %in% rownames(count.matrix),]
+#         map.lengths <- map.lengths[order(map.lengths$ensembl_gene_id),]
+# 
+#         ave_repl(count.matrix[rownames(count.matrix) %in% map.lengths$ensembl_gene_id,] / map.lengths$exon_map_length * 1e9 / mean(colSums(count.matrix)), "-norm-by-length-exon-rpkm")
 }
 
 initialize_sets <- function() {
